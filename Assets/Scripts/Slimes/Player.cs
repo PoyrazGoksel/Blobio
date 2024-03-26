@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Events;
+using UnityEngine;
 
 namespace Slimes
 {
@@ -13,6 +14,7 @@ namespace Slimes
 
         private void OnBaitCollision(Bait colBait)
         {
+            PlayerEvents.PlayerBaitConsume?.Invoke();
             Debug.LogWarning($"ColBait {colBait}");
         }
     }
