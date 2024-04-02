@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 3765337946739072254}
   m_Layer: 0
   m_Name: Bait
-  m_TagString: Untagged
+  m_TagString: Bait
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

@@ -1,22 +1,26 @@
 using Events;
+using Slimes;
 using TMPro;
 using UnityEngine;
 
 public class PlayerScore : MonoBehaviour
 {
+    private const string ScoreTxt = "Score: ";
     [SerializeField] private TextMeshProUGUI _scoreTMP;
-    private int _playerScore;
-    
+
+    private void Awake()
+    {
+        _scoreTMP.text = ScoreTxt + 0;
+    }
+
     private void OnEnable()
     {
         PlayerEvents.PlayerBaitConsume += OnPlayerBaitConsume;
     }
 
-    private void OnPlayerBaitConsume()
+    private void OnPlayerBaitConsume(int playerScore)
     {
-        _playerScore ++;
-
-        _scoreTMP.text = "Score: " + _playerScore;
+        _scoreTMP.text = ScoreTxt + playerScore;
     }
 
     private void OnDisable()

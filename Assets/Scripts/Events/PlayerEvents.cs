@@ -4,6 +4,6 @@ namespace Events
 {
     public class PlayerEvents
     {
-        public static UnityAction PlayerBaitConsume;
+        public static UnityAction<int> PlayerBaitConsume;
     }
 }

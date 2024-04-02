@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Slimes;
 using UnityEngine;
+using WorldObjects;
 using Random = UnityEngine.Random;
 
 public class BaitSpawner : MonoBehaviour
