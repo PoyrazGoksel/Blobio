@@ -8,7 +8,13 @@ namespace Slimes.Player
     {
         [SerializeField] private SlimeCollisionDetector _slimeCollisionDetector;
 
-        private void OnEnable()
+        protected override void IncreaseSize(int size)
+        {
+            base.IncreaseSize(size);
+            PlayerEvents.SizeIncreased?.Invoke(size);
+        }
+
+        protected override void RegisterEvents()
         {
             _slimeCollisionDetector.BaitCollision += OnBaitCollision;
         }
@@ -19,7 +25,7 @@ namespace Slimes.Player
             PlayerEvents.PlayerBaitConsume?.Invoke(Score);
         }
 
-        private void OnDisable()
+        protected override void UnRegisterEvents()
         {
             _slimeCollisionDetector.BaitCollision -= OnBaitCollision;
         }

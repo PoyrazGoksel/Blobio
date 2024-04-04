@@ -29,15 +29,12 @@ namespace Slimes.Pathfinding
                 { 
                     Ray inputRay = _mainCam.ScreenPointToRay(Input.mousePosition);
                 
-                    //Debug.DrawRay(_mainCamTrans.position, inputRay.direction * 100f, Color.red, Time.deltaTime);
-
-                    if(Physics.Raycast(inputRay, out RaycastHit inputRayCastHit, 100f))
+                    RaycastHit[] hits = Physics.RaycastAll(inputRay, 100f);
+                    foreach (RaycastHit hit in hits)
                     {
-                        //Debug.LogWarning(inputRayCastHit.transform.gameObject);
-
-                        if(inputRayCastHit.transform.CompareTag("Ground"))
+                        if(hit.transform.CompareTag("Ground"))
                         {
-                            Vector3 goToPos = inputRayCastHit.point;
+                            Vector3 goToPos = hit.point;
 
                             _aiPath.destination = goToPos;
                             _aiPath.SearchPath();

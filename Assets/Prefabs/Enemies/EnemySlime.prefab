@@ -52,7 +52,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   version: 1
   drawGizmos: 1
-  detailedGizmos: 1
+  detailedGizmos: 0
   startEndModifier:
     addPoints: 0
     exactStartPoint: 3
@@ -84,7 +84,7 @@ MonoBehaviour:
   repathRate: 0.2
   canSearch: 0
   canMove: 1
-  maxSpeed: 1
+  maxSpeed: 10
   gravity: {x: NaN, y: NaN, z: NaN}
   groundMask:
     serializedVersion: 2
@@ -101,7 +101,7 @@ MonoBehaviour:
   alwaysDrawGizmos: 0
   slowWhenNotFacingTarget: 1
   whenCloseToDestination: 0
-  constrainInsideGraph: 0
+  constrainInsideGraph: 1
 --- !u!114 &3617181580908042667
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -115,6 +115,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _score: 0
+  _rigTrans: {fileID: 7561319802615531558}
   _aiPath: {fileID: 7876329696568836153}
   _sphereDetector: {fileID: 3214746816597624395}
 --- !u!54 &3282236343722204240

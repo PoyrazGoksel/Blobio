@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 8465391603308837303}
   - component: {fileID: 7496647336884909800}
   - component: {fileID: 7354217610078380017}
+  - component: {fileID: 645846703215133096}
+  - component: {fileID: 6341102348992718645}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -47,6 +49,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e840e0829155454697c52ddccaaccfc8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _score: 0
+  _rigTrans: {fileID: 179928478355080820}
   _slimeCollisionDetector: {fileID: 105462224786062952}
 --- !u!114 &7354217610078380017
 MonoBehaviour:
@@ -60,7 +64,71 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a499968d75839d148a60d0fc7046b9c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _aiPath: {fileID: 0}
+  _aiPath: {fileID: 6341102348992718645}
+--- !u!114 &645846703215133096
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4925466073308232933}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 373b52eb9bf8c40f785bb6947a1aee66, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 1
+  drawGizmos: 1
+  detailedGizmos: 1
+  startEndModifier:
+    addPoints: 0
+    exactStartPoint: 3
+    exactEndPoint: 3
+    useRaycasting: 0
+    mask:
+      serializedVersion: 2
+      m_Bits: 4294967295
+    useGraphRaycasting: 0
+  traversableTags: -1
+  tagPenalties: 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+  graphMask:
+    value: -1
+--- !u!114 &6341102348992718645
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4925466073308232933}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6eb1402c17e84a9282a7f0f62eb584f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 2
+  radius: 0.5
+  height: 2
+  repathRate: 0.2
+  canSearch: 0
+  canMove: 1
+  maxSpeed: 5
+  gravity: {x: NaN, y: NaN, z: NaN}
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  centerOffsetCompatibility: NaN
+  orientation: 0
+  enableRotation: 1
+  targetCompatibility: {fileID: 0}
+  maxAcceleration: -2.5
+  rotationSpeed: 360
+  slowdownDistance: 0.6
+  pickNextWaypointDist: 2
+  endReachedDistance: 0.2
+  alwaysDrawGizmos: 0
+  slowWhenNotFacingTarget: 1
+  whenCloseToDestination: 0
+  constrainInsideGraph: 1
 --- !u!1 &7876043438810002006
 GameObject:
   m_ObjectHideFlags: 0
@@ -186,6 +254,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d941199d4a58fcb45adc75ea8e37c42c, type: 3}
+--- !u!4 &179928478355080820 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7625824445407367461, guid: d941199d4a58fcb45adc75ea8e37c42c, type: 3}
+  m_PrefabInstance: {fileID: 7758405908621416273}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &4462761655143991391 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6216532115693788942, guid: d941199d4a58fcb45adc75ea8e37c42c, type: 3}

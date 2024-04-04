@@ -1,3 +1,4 @@
+using Events;
 using UnityEngine;
 
 namespace Slimes.Player
@@ -8,7 +9,22 @@ namespace Slimes.Player
         [SerializeField] private float _panAngle = 60f;
         [SerializeField] private Transform _slimeTrans;
         [SerializeField] private Transform _myTrans;
-    
+
+        private void OnEnable()
+        {
+            PlayerEvents.SizeIncreased += OnSizeIncreased;
+        }
+
+        private void OnDisable()
+        {
+            PlayerEvents.SizeIncreased -= OnSizeIncreased;
+        }
+
+        private void OnSizeIncreased(int playerSize)
+        {
+            _offSet += 0.1f * playerSize;
+        }
+
         private void Update()
         {
             Vector3 offSetVect = Vector3.back * _offSet;
