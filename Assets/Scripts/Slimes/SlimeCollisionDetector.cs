@@ -1,6 +1,6 @@
 using Events;
+using Events.Internal;
 using UnityEngine;
-using UnityEngine.Events;
 using Utils;
 using WorldObjects;
 
@@ -8,13 +8,13 @@ namespace Slimes
 {
     public class SlimeCollisionDetector : EventListenerMono
     {
-        public event UnityAction<Bait> BaitCollision;
-
+        [SerializeField] private SlimeEvents _slimeEvents;
+        
         private void OnTriggerEnter(Collider other)
         {
             if(other.TryGetComponent(out Bait colBait))
             {
-                BaitCollision?.Invoke(colBait);
+                _slimeEvents.BaitCollision?.Invoke(colBait);
                 colBait.OnEaten();
             }
         }

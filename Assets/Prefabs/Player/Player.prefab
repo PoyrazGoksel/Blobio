@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 7354217610078380017}
   - component: {fileID: 645846703215133096}
   - component: {fileID: 6341102348992718645}
+  - component: {fileID: 3173645888179740789}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -52,6 +53,7 @@ MonoBehaviour:
   _score: 0
   _rigTrans: {fileID: 179928478355080820}
   _slimeCollisionDetector: {fileID: 105462224786062952}
+  _slimeEvents: {fileID: 3173645888179740789}
 --- !u!114 &7354217610078380017
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -129,6 +131,18 @@ MonoBehaviour:
   slowWhenNotFacingTarget: 1
   whenCloseToDestination: 0
   constrainInsideGraph: 1
+--- !u!114 &3173645888179740789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4925466073308232933}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 415d17a0db6a458bbaba5482b4d263d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &7876043438810002006
 GameObject:
   m_ObjectHideFlags: 0
@@ -198,6 +212,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5cee9c83df8911d408e0bf2796cb1a77, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _slimeEvents: {fileID: 3173645888179740789}
 --- !u!54 &2365698926749400954
 Rigidbody:
   m_ObjectHideFlags: 0

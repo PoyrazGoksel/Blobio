@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using Installers;
 using Pathfinding;
 using UnityEngine;
 
@@ -7,30 +9,29 @@ namespace Slimes.Pathfinding
     public class PlayerPathSetter : MonoBehaviour
     {
         [SerializeField] private AIPath _aiPath;
-        
-        private Camera _mainCam;
         private Vector3 _moveDelta;
+        private Settings _mySettings;
 
         private void Awake()
         {
-            _mainCam = Camera.main;
-    }
-
-        private void Start()
-        {
-            StartCoroutine(InputListenerRoutine());
+            _mySettings = ProjectInstaller.Instance.GameSettings.PlayerPathSetterSettings;
         }
+
+        private void Start() {StartCoroutine(InputListenerRoutine());}
 
         private IEnumerator InputListenerRoutine()
         {
             while(true)
             {
-                if(Input.GetMouseButton(0))
-                { 
-                    Ray inputRay = _mainCam.ScreenPointToRay(Input.mousePosition);
+                _aiPath.maxSpeed = _mySettings.PlayerSpeed;
                 
+                if(Input.GetMouseButton(0))
+                {
+                    Ray inputRay = ProjectInstaller.Instance.MainCam.ScreenPointToRay(Input.mousePosition);
+
                     RaycastHit[] hits = Physics.RaycastAll(inputRay, 100f);
-                    foreach (RaycastHit hit in hits)
+
+                    foreach(RaycastHit hit in hits)
                     {
                         if(hit.transform.CompareTag("Ground"))
                         {
@@ -41,9 +42,16 @@ namespace Slimes.Pathfinding
                         }
                     }
                 }
-            
+
                 yield return null;
             }
+        }
+
+        [Serializable]
+        public class Settings
+        {
+            public float PlayerSpeed => _playerSpeed;
+            [SerializeField] private float _playerSpeed;
         }
     }
 }

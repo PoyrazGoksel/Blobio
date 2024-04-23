@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 3617181580908042667}
   - component: {fileID: 3282236343722204240}
   - component: {fileID: 3214746816597624395}
+  - component: {fileID: 7122129691195034126}
   m_Layer: 0
   m_Name: EnemySlime
   m_TagString: Untagged
@@ -166,6 +167,18 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 7.66
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7122129691195034126
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1166753482753006228}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 415d17a0db6a458bbaba5482b4d263d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2780000900315623668
 GameObject:
   m_ObjectHideFlags: 0
@@ -548,6 +561,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5cee9c83df8911d408e0bf2796cb1a77, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _slimeEvents: {fileID: 7122129691195034126}
 --- !u!54 &839080287761380960
 Rigidbody:
   m_ObjectHideFlags: 0

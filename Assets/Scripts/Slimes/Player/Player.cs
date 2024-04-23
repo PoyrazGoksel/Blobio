@@ -1,4 +1,6 @@
 ﻿using Events;
+using Events.Internal;
+using Installers;
 using UnityEngine;
 using WorldObjects;
 
@@ -7,6 +9,7 @@ namespace Slimes.Player
     public class Player : Slime
     {
         [SerializeField] private SlimeCollisionDetector _slimeCollisionDetector;
+        [SerializeField] private SlimeEvents _slimeEvents;
 
         protected override void IncreaseSize(int size)
         {
@@ -16,7 +19,7 @@ namespace Slimes.Player
 
         protected override void RegisterEvents()
         {
-            _slimeCollisionDetector.BaitCollision += OnBaitCollision;
+            _slimeEvents.BaitCollision += OnBaitCollision;
         }
 
         protected override void OnBaitCollision(Bait colBait)
@@ -27,7 +30,7 @@ namespace Slimes.Player
 
         protected override void UnRegisterEvents()
         {
-            _slimeCollisionDetector.BaitCollision -= OnBaitCollision;
+            _slimeEvents.BaitCollision -= OnBaitCollision;
         }
     }
 }
