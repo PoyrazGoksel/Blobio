@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b167439577274a319ecce40b4d3348b7, type: 3}
   m_Name: GameSettings
   m_EditorClassIdentifier: 
-  _playerSpeed: 13.3
   _playerCamSettings:
     _offSet: 13.56
     _panAngle: 50.9
@@ -25,3 +24,5 @@ MonoBehaviour:
     _baitSpawnFreq: 1
     _baitPrefab: {fileID: 4314171007272593559, guid: ab3a23e23ed39c24cbc10bb0ce7d77ca, type: 3}
     _spawnOffSetY: 0.25
+  _playerPathSetterSettings:
+    _playerSpeed: 10

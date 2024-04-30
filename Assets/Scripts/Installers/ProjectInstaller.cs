@@ -1,4 +1,5 @@
 ﻿using Datas;
+using Events;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -9,9 +10,10 @@ namespace Installers
     {
         public static ProjectInstaller Instance{get;private set;}
         public static UnityAction ProjectInstalled;
-        
+        private PlayerData _playerData;
         public GameSettings GameSettings{get;private set;}
         public Camera MainCam{get;private set;}
+        public PlayerData PlayerData => _playerData;
 
         //This executes before awake of first scene
         private ProjectInstaller()
@@ -21,8 +23,15 @@ namespace Installers
 
             Instance = this;
 
+            RegisterEvents();
             InstallSettings();
+            InstallData();
             ProjectInstalled?.Invoke();
+        }
+
+        private void InstallData()
+        {
+            _playerData = new PlayerData();
         }
 
         private void InstallSettings()
@@ -42,6 +51,21 @@ namespace Installers
             {
                 MainCam = Camera.main;
             }
+        }
+
+        private static void LoadScene(string sceneName)
+        {
+            SceneManager.LoadScene(sceneName);
+        }
+
+        private void RegisterEvents()
+        {
+            MainMenuEvents.NewGameBTN += OnNewGameBTN;
+        }
+
+        private void OnNewGameBTN()
+        {
+            LoadScene("Main");
         }
     }
 }
