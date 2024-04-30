@@ -44,9 +44,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7f090f0fe8b6904c8996840cab49b13, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _terrainSize: {x: 100, y: 100}
   _baits: []
-  _initBaitCount: 50
-  _baitSpawnFreq: 1
-  _baitPrefab: {fileID: 4314171007272593559, guid: ab3a23e23ed39c24cbc10bb0ce7d77ca, type: 3}
-  _spawnOffSetY: 0.25
+  _eatenParticleSystemPrefab: {fileID: 2960939663219873914, guid: 434ea85fd9da619468ef1a328d982e4d, type: 3}

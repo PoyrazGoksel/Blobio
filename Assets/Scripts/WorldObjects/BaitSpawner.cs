@@ -10,6 +10,8 @@ namespace WorldObjects
     public class BaitSpawner : MonoBehaviour
     {
         [SerializeField] private List<Bait> _baits;
+        [SerializeField] private GameObject _eatenParticleSystemPrefab;
+        
         private Coroutine _coroutine;
         private Settings _mySettings;
         private void Awake()
@@ -47,7 +49,12 @@ namespace WorldObjects
         private void OnBaitEaten(Bait eatenBait)
         {
             eatenBait.Eaten -= OnBaitEaten;
+
+            GameObject newParticleSystemGo = Instantiate
+            (_eatenParticleSystemPrefab, eatenBait.InitPos, Quaternion.identity);
             _baits.Remove(eatenBait);
+
+            StartCoroutine(ParticleDelayedDestroy(newParticleSystemGo, 2f));
             Destroy(eatenBait.gameObject);
         }
 
@@ -60,7 +67,14 @@ namespace WorldObjects
                 yield return new WaitForSeconds(_mySettings.BaitSpawnFreq);
             }
         }
-    
+
+        private IEnumerator ParticleDelayedDestroy(GameObject particleSystem, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            
+            Destroy(particleSystem);
+        }
+
         [Serializable]
         public class Settings
         {

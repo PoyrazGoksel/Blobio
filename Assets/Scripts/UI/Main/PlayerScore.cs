@@ -2,7 +2,7 @@ using Events;
 using TMPro;
 using UnityEngine;
 
-namespace UI
+namespace UI.Main
 {
     public class PlayerScore : MonoBehaviour
     {

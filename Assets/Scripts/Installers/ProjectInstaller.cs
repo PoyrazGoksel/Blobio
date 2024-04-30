@@ -61,6 +61,12 @@ namespace Installers
         private void RegisterEvents()
         {
             MainMenuEvents.NewGameBTN += OnNewGameBTN;
+            MainUIEvents.ExitBTN += OnExitBTN;
+        }
+
+        private void OnExitBTN()
+        {
+            LoadScene("MainMenu");
         }
 
         private void OnNewGameBTN()
