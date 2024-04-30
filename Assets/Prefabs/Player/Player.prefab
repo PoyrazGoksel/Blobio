@@ -54,6 +54,7 @@ MonoBehaviour:
   _rigTrans: {fileID: 179928478355080820}
   _slimeCollisionDetector: {fileID: 105462224786062952}
   _slimeEvents: {fileID: 3173645888179740789}
+  _playerPathSetter: {fileID: 7354217610078380017}
 --- !u!114 &7354217610078380017
 MonoBehaviour:
   m_ObjectHideFlags: 0

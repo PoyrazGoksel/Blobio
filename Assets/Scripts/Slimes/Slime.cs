@@ -1,10 +1,11 @@
-﻿using UnityEngine;
+﻿using Events;
+using UnityEngine;
 using Utils;
 using WorldObjects;
 
 namespace Slimes
 {
-    public abstract class Slime : EventListenerMono
+    public abstract class Slime : EventListenerMono, IPausable
     {
         public int Score => _score;
         [SerializeField] protected int _score;
@@ -21,5 +22,47 @@ namespace Slimes
             _score ++;
             IncreaseSize(_score); // You can change this value to your liking
         }
+
+        protected abstract void Pause();
+        protected abstract void UnPause();
+
+        void IPausable.UnPause()
+        {
+            UnPause();
+        }
+
+        void IPausable.Pause()
+        {
+            Pause();
+        }
+
+        protected override void RegisterEvents()
+        {
+            GameStateEvents.Pause += OnPause;
+        }
+        
+        private void OnPause(bool isPaused)
+        {
+            if(isPaused)
+            {
+                Pause();
+            }
+            else
+            {
+                UnPause();
+            }
+        }
+        
+        protected override void UnRegisterEvents()
+        {
+            GameStateEvents.Pause -= OnPause;
+        }
+    }
+
+    public interface IPausable
+    {
+        void Pause();
+
+        void UnPause();
     }
 }

@@ -1,6 +1,6 @@
 ﻿using Events;
 using Events.Internal;
-using Installers;
+using Slimes.Pathfinding;
 using UnityEngine;
 using WorldObjects;
 
@@ -10,6 +10,7 @@ namespace Slimes.Player
     {
         [SerializeField] private SlimeCollisionDetector _slimeCollisionDetector;
         [SerializeField] private SlimeEvents _slimeEvents;
+        [SerializeField] private PlayerPathSetter _playerPathSetter;
 
         protected override void IncreaseSize(int size)
         {
@@ -17,8 +18,19 @@ namespace Slimes.Player
             PlayerEvents.SizeIncreased?.Invoke(size);
         }
 
+        protected override void Pause()
+        {
+            _playerPathSetter.Pause();
+        }
+
+        protected override void UnPause()
+        {
+            _playerPathSetter.UnPause();
+        }
+
         protected override void RegisterEvents()
         {
+            base.RegisterEvents();
             _slimeEvents.BaitCollision += OnBaitCollision;
         }
 
@@ -30,6 +42,7 @@ namespace Slimes.Player
 
         protected override void UnRegisterEvents()
         {
+            base.UnRegisterEvents();
             _slimeEvents.BaitCollision -= OnBaitCollision;
         }
     }

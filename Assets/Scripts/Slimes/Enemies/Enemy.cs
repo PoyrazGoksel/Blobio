@@ -128,8 +128,14 @@ namespace Slimes.Enemies
             _isSeeking = false;
         }
 
-        protected override void RegisterEvents() {}
+        protected override void Pause()
+        {
+            _aiPath.isStopped = true;
+        }
 
-        protected override void UnRegisterEvents() {}
+        protected override void UnPause()
+        {
+            _aiPath.isStopped = false;
+        }
     }
 }

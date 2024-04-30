@@ -53,5 +53,14 @@ namespace Slimes.Pathfinding
             public float PlayerSpeed => _playerSpeed;
             [SerializeField] private float _playerSpeed;
         }
+
+        public void Pause()
+        {
+            _aiPath.isStopped = true;
+        }  
+        public void UnPause()
+        {
+            _aiPath.isStopped = false;
+        }
     }
 }
