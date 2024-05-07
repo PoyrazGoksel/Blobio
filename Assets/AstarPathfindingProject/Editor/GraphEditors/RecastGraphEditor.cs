@@ -132,7 +132,7 @@ namespace Pathfinding {
 			graph.forcedBoundsSize = Vector3.Max(graph.forcedBoundsSize, Vector3.one * 0.001f);
 			graph.rotation = EditorGUILayout.Vector3Field("Rotation", graph.rotation);
 
-			if (GUILayout.Button(new GUIContent("Snap bounds to scene", "Will snap the bounds of the graph to exactly contain all meshes that the bounds currently touches"))) {
+			if (GUILayout.Button(new GUIContent("Snap bounds to scene", "Will snap the bounds of the graph to exactly contain all meshes in the scene that matches the masks."))) {
 				graph.SnapForceBoundsToScene();
 				GUI.changed = true;
 			}
@@ -190,7 +190,7 @@ namespace Pathfinding {
 		}
 
 		/// <summary>Exports the INavmesh graph to a .obj file</summary>
-		public static void ExportToFile (RecastGraph target) {
+		public static void ExportToFile (NavmeshBase target) {
 			//INavmesh graph = (INavmesh)target;
 			if (target == null) return;
 

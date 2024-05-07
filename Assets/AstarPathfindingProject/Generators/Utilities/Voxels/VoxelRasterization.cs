@@ -142,10 +142,6 @@ namespace Pathfinding.Voxels {
 		}
 
 		public void VoxelizeInput (Pathfinding.Util.GraphTransform graphTransform, Bounds graphSpaceBounds) {
-			AstarProfiler.StartProfile("Build Navigation Mesh");
-
-			AstarProfiler.StartProfile("Voxelizing - Step 1");
-
 			// Transform from voxel space to graph space.
 			// then scale from voxel space (one unit equals one voxel)
 			// Finally add min
@@ -157,10 +153,6 @@ namespace Pathfinding.Voxels {
 			transform = graphTransform * voxelMatrix * Matrix4x4.TRS(new Vector3(0.5f, 0, 0.5f), Quaternion.identity, Vector3.one);
 
 			int maximumVoxelYCoord = (int)(graphSpaceBounds.size.y / cellHeight);
-
-			AstarProfiler.EndProfile("Voxelizing - Step 1");
-
-			AstarProfiler.StartProfile("Voxelizing - Step 2 - Init");
 
 			// Cosine of the slope limit in voxel space (some tweaks are needed because the voxel space might be stretched out along the y axis)
 			float slopeLimit = Mathf.Cos(Mathf.Atan(Mathf.Tan(maxSlope*Mathf.Deg2Rad)*(cellSize/cellHeight)));
@@ -183,9 +175,7 @@ namespace Pathfinding.Voxels {
 			// Create buffer, here vertices will be stored multiplied with the local-to-voxel-space matrix
 			var verts = new Vector3[maxVerts];
 
-			AstarProfiler.EndProfile("Voxelizing - Step 2 - Init");
 
-			AstarProfiler.StartProfile("Voxelizing - Step 2");
 
 			// This loop is the hottest place in the whole rasterization process
 			// it usually accounts for around 50% of the time
@@ -237,7 +227,6 @@ namespace Pathfinding.Voxels {
 
 					int area;
 
-					//AstarProfiler.StartProfile ("Rasterize...");
 
 					normal = Vector3.Cross(p2-p1, p3-p1);
 
@@ -313,10 +302,7 @@ namespace Pathfinding.Voxels {
 						}
 					}
 				}
-				//AstarProfiler.EndFastProfile(0);
-				//AstarProfiler.EndProfile ("Rasterize...");
 			}
-			AstarProfiler.EndProfile("Voxelizing - Step 2");
 		}
 
 		public void DebugDrawSpans () {
@@ -349,8 +335,6 @@ namespace Pathfinding.Voxels {
 
 
 		public void BuildCompactField () {
-			AstarProfiler.StartProfile("Build Compact Voxel Field");
-
 			//Build compact representation
 			int spanCount = voxelArea.GetSpanCount();
 
@@ -434,13 +418,9 @@ namespace Pathfinding.Voxels {
 #endif
 				}
 			}
-
-			AstarProfiler.EndProfile("Build Compact Voxel Field");
 		}
 
 		public void BuildVoxelConnections () {
-			AstarProfiler.StartProfile("Build Voxel Connections");
-
 			int wd = voxelArea.width*voxelArea.depth;
 
 			CompactVoxelSpan[] spans = voxelArea.compactSpans;
@@ -489,8 +469,6 @@ namespace Pathfinding.Voxels {
 					}
 				}
 			}
-
-			AstarProfiler.EndProfile("Build Voxel Connections");
 		}
 
 		void DrawLine (int a, int b, int[] indices, int[] verts, Color color) {
@@ -566,8 +544,6 @@ namespace Pathfinding.Voxels {
 
 
 		public void ErodeWalkableArea (int radius) {
-			AstarProfiler.StartProfile("Erode Walkable Area");
-
 			ushort[] src = voxelArea.tmpUShortArr;
 			if (src == null || src.Length < voxelArea.compactSpanCount) {
 				src = voxelArea.tmpUShortArr = new ushort[voxelArea.compactSpanCount];
@@ -584,13 +560,9 @@ namespace Pathfinding.Voxels {
 					voxelArea.areaTypes[i] = UnwalkableArea;
 				}
 			}
-
-			AstarProfiler.EndProfile("Erode Walkable Area");
 		}
 
 		public void BuildDistanceField () {
-			AstarProfiler.StartProfile("Build Distance Field");
-
 			ushort[] src = voxelArea.tmpUShortArr;
 			if (src == null || src.Length < voxelArea.compactSpanCount) {
 				src = voxelArea.tmpUShortArr = new ushort[voxelArea.compactSpanCount];
@@ -608,8 +580,6 @@ namespace Pathfinding.Voxels {
 
 			dst = BoxBlur(src, dst);
 			voxelArea.dist = dst;
-
-			AstarProfiler.EndProfile("Build Distance Field");
 		}
 
 		/// <summary>TODO: Complete the ErodeVoxels function translation</summary>

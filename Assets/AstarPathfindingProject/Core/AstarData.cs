@@ -2,6 +2,8 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using Pathfinding.WindowsStore;
+using Pathfinding.Serialization;
+using Pathfinding.Util;
 #if UNITY_WINRT && !UNITY_EDITOR
 //using MarkerMetro.Unity.WinLegacy.IO;
 //using MarkerMetro.Unity.WinLegacy.Reflection;
@@ -11,9 +13,8 @@ namespace Pathfinding {
 	[System.Serializable]
 	/// <summary>
 	/// Stores the navigation graphs for the A* Pathfinding System.
-	/// \ingroup relevant
 	///
-	/// An instance of this class is assigned to AstarPath.data, from it you can access all graphs loaded through the <see cref="graphs"/> variable.\n
+	/// An instance of this class is assigned to <see cref="AstarPath.data"/>. From it you can access all graphs loaded through the <see cref="graphs"/> variable.
 	/// This class also handles a lot of the high level serialization.
 	/// </summary>
 	public class AstarData {
@@ -25,38 +26,23 @@ namespace Pathfinding {
 		}
 
 		#region Fields
-		/// <summary>
-		/// Shortcut to the first NavMeshGraph.
-		/// Updated at scanning time
-		/// </summary>
+		/// <summary>Shortcut to the first <see cref="NavMeshGraph"/></summary>
 		public NavMeshGraph navmesh { get; private set; }
 
 #if !ASTAR_NO_GRID_GRAPH
-		/// <summary>
-		/// Shortcut to the first GridGraph.
-		/// Updated at scanning time
-		/// </summary>
+		/// <summary>Shortcut to the first <see cref="GridGraph"/></summary>
 		public GridGraph gridGraph { get; private set; }
 
-		/// <summary>
-		/// Shortcut to the first LayerGridGraph.
-		/// Updated at scanning time.
-		/// </summary>
+		/// <summary>Shortcut to the first <see cref="LayerGridGraph"/>.</summary>
 		public LayerGridGraph layerGridGraph { get; private set; }
 #endif
 
 #if !ASTAR_NO_POINT_GRAPH
-		/// <summary>
-		/// Shortcut to the first PointGraph.
-		/// Updated at scanning time
-		/// </summary>
+		/// <summary>Shortcut to the first <see cref="PointGraph"/>.</summary>
 		public PointGraph pointGraph { get; private set; }
 #endif
 
-		/// <summary>
-		/// Shortcut to the first RecastGraph.
-		/// Updated at scanning time.
-		/// </summary>
+		/// <summary>Shortcut to the first <see cref="RecastGraph"/>.</summary>
 		public RecastGraph recastGraph { get; private set; }
 
 		/// <summary>
@@ -84,47 +70,29 @@ namespace Pathfinding {
 #endif
 
 		/// <summary>
-		/// All graphs this instance holds.
+		/// All graphs.
 		/// This will be filled only after deserialization has completed.
 		/// May contain null entries if graph have been removed.
 		/// </summary>
 		[System.NonSerialized]
 		public NavGraph[] graphs = new NavGraph[0];
 
-		//Serialization Settings
-
 		/// <summary>
 		/// Serialized data for all graphs and settings.
 		/// Stored as a base64 encoded string because otherwise Unity's Undo system would sometimes corrupt the byte data (because it only stores deltas).
 		///
 		/// This can be accessed as a byte array from the <see cref="data"/> property.
-		///
-		/// \since 3.6.1
 		/// </summary>
 		[SerializeField]
 		string dataString;
 
-		/// <summary>
-		/// Data from versions from before 3.6.1.
-		/// Used for handling upgrades
-		/// \since 3.6.1
-		/// </summary>
-		[SerializeField]
-		[UnityEngine.Serialization.FormerlySerializedAs("data")]
-		private byte[] upgradeData;
-
 		/// <summary>Serialized data for all graphs and settings</summary>
 		private byte[] data {
 			get {
-				// Handle upgrading from earlier versions than 3.6.1
-				if (upgradeData != null && upgradeData.Length > 0) {
-					data = upgradeData;
-					upgradeData = null;
-				}
-				return dataString != null? System.Convert.FromBase64String (dataString) : null;
+				return dataString != null? System.Convert.FromBase64String(dataString) : null;
 			}
 			set {
-				dataString = value != null? System.Convert.ToBase64String (value) : null;
+				dataString = value != null? System.Convert.ToBase64String(value) : null;
 			}
 		}
 
@@ -133,13 +101,6 @@ namespace Pathfinding {
 		/// If set, on start the graphs will be deserialized from this file.
 		/// </summary>
 		public TextAsset file_cachedStartup;
-
-		/// <summary>
-		/// Serialized data for cached startup.
-		///
-		/// Deprecated: Deprecated since 3.6, AstarData.file_cachedStartup is now used instead
-		/// </summary>
-		public byte[] data_cachedStartup;
 
 		/// <summary>
 		/// Should graph-data be cached.
@@ -157,9 +118,7 @@ namespace Pathfinding {
 
 		#endregion
 
-		public byte[] GetData () {
-			return data;
-		}
+		public byte[] GetData() => data;
 
 		public void SetData (byte[] data) {
 			this.data = data;
@@ -281,7 +240,7 @@ namespace Pathfinding {
 		/// See: DeserializeGraphs(byte[])
 		/// </summary>
 		public byte[] SerializeGraphs () {
-			return SerializeGraphs(Pathfinding.Serialization.SerializeSettings.Settings);
+			return SerializeGraphs(SerializeSettings.Settings);
 		}
 
 		/// <summary>
@@ -289,10 +248,8 @@ namespace Pathfinding {
 		/// See: DeserializeGraphs(byte[])
 		/// See: Pathfinding.Serialization.SerializeSettings
 		/// </summary>
-		public byte[] SerializeGraphs (Pathfinding.Serialization.SerializeSettings settings) {
-			uint checksum;
-
-			return SerializeGraphs(settings, out checksum);
+		public byte[] SerializeGraphs (SerializeSettings settings) {
+			return SerializeGraphs(settings, out var _);
 		}
 
 		/// <summary>
@@ -300,9 +257,9 @@ namespace Pathfinding {
 		/// Serializes all graphs to a byte array
 		/// A similar function exists in the AstarPathEditor.cs script to save additional info
 		/// </summary>
-		public byte[] SerializeGraphs (Pathfinding.Serialization.SerializeSettings settings, out uint checksum) {
+		public byte[] SerializeGraphs (SerializeSettings settings, out uint checksum) {
 			var graphLock = AssertSafe();
-			var sr = new Pathfinding.Serialization.AstarSerializer(this, settings);
+			var sr = new AstarSerializer(this, settings, active.gameObject);
 
 			sr.OpenSerialize();
 			sr.SerializeGraphs(graphs);
@@ -332,7 +289,7 @@ namespace Pathfinding {
 					graphs[i].active = null;
 				}
 			}
-			graphs = null;
+			graphs = new NavGraph[0];
 			UpdateShortcuts();
 		}
 
@@ -362,7 +319,7 @@ namespace Pathfinding {
 
 			try {
 				if (bytes != null) {
-					var sr = new Pathfinding.Serialization.AstarSerializer(this);
+					var sr = new AstarSerializer(this, active.gameObject);
 
 					if (sr.OpenDeserialize(bytes)) {
 						DeserializeGraphsPartAdditive(sr);
@@ -384,7 +341,7 @@ namespace Pathfinding {
 		}
 
 		/// <summary>Helper function for deserializing graphs</summary>
-		void DeserializeGraphsPartAdditive (Pathfinding.Serialization.AstarSerializer sr) {
+		void DeserializeGraphsPartAdditive (AstarSerializer sr) {
 			if (graphs == null) graphs = new NavGraph[0];
 
 			var gr = new List<NavGraph>(graphs);
@@ -400,7 +357,7 @@ namespace Pathfinding {
 			sr.DeserializeEditorSettingsCompatibility();
 			sr.DeserializeExtraInfo();
 
-			//Assign correct graph indices.
+			// Assign correct graph indices.
 			for (int i = 0; i < graphs.Length; i++) {
 				if (graphs[i] == null) continue;
 				graphs[i].GetNodes(node => node.GraphIndex = (uint)i);
@@ -472,40 +429,6 @@ namespace Pathfinding {
 		}
 
 		#region GraphCreation
-		/// <summary>
-		/// Returns: A System.Type which matches the specified type string. If no mathing graph type was found, null is returned
-		///
-		/// Deprecated:
-		/// </summary>
-		[System.Obsolete("If really necessary. Use System.Type.GetType instead.")]
-		public System.Type GetGraphType (string type) {
-			for (int i = 0; i < graphTypes.Length; i++) {
-				if (graphTypes[i].Name == type) {
-					return graphTypes[i];
-				}
-			}
-			return null;
-		}
-
-		/// <summary>
-		/// Creates a new instance of a graph of type type. If no matching graph type was found, an error is logged and null is returned
-		/// Returns: The created graph
-		/// See: <see cref="CreateGraph(System.Type)"/>
-		///
-		/// Deprecated:
-		/// </summary>
-		[System.Obsolete("Use CreateGraph(System.Type) instead")]
-		public NavGraph CreateGraph (string type) {
-			Debug.Log("Creating Graph of type '"+type+"'");
-
-			for (int i = 0; i < graphTypes.Length; i++) {
-				if (graphTypes[i].Name == type) {
-					return CreateGraph(graphTypes[i]);
-				}
-			}
-			Debug.LogError("Graph type ("+type+") wasn't found");
-			return null;
-		}
 
 		/// <summary>
 		/// Creates a new graph instance of type type
@@ -519,29 +442,10 @@ namespace Pathfinding {
 		}
 
 		/// <summary>
-		/// Adds a graph of type type to the <see cref="graphs"/> array
-		///
-		/// Deprecated:
+		/// Adds a graph of type T to the <see cref="graphs"/> array.
+		/// See: runtime-graphs (view in online documentation for working links)
 		/// </summary>
-		[System.Obsolete("Use AddGraph(System.Type) instead")]
-		public NavGraph AddGraph (string type) {
-			NavGraph graph = null;
-
-			for (int i = 0; i < graphTypes.Length; i++) {
-				if (graphTypes[i].Name == type) {
-					graph = CreateGraph(graphTypes[i]);
-				}
-			}
-
-			if (graph == null) {
-				Debug.LogError("No NavGraph of type '"+type+"' could be found");
-				return null;
-			}
-
-			AddGraph(graph);
-
-			return graph;
-		}
+		public T AddGraph<T> () where T : NavGraph => AddGraph(typeof(T)) as T;
 
 		/// <summary>
 		/// Adds a graph of type type to the <see cref="graphs"/> array.
@@ -607,14 +511,9 @@ namespace Pathfinding {
 		/// The empty position will be reused if a new graph is added.
 		///
 		/// Returns: True if the graph was sucessfully removed (i.e it did exist in the <see cref="graphs"/> array). False otherwise.
-		///
-		/// Version: Changed in 3.2.5 to call SafeOnDestroy before removing
-		/// and nulling it in the array instead of removing the element completely in the <see cref="graphs"/> array.
 		/// </summary>
 		public bool RemoveGraph (NavGraph graph) {
-			// Make sure the pathfinding threads are stopped
-			// If we don't wait until pathfinding that is potentially running on
-			// this graph right now we could end up with NullReferenceExceptions
+			// Make sure the pathfinding threads are paused
 			var graphLock = AssertSafe();
 
 			((IGraphInternals)graph).OnDestroy();
@@ -708,24 +607,6 @@ namespace Pathfinding {
 			if (graphs == null) yield break;
 			for (int i = 0; i < graphs.Length; i++) {
 				if (graphs[i] is IUpdatableGraph) {
-					yield return graphs[i];
-				}
-			}
-		}
-
-		/// <summary>
-		/// All graphs which implements the UpdateableGraph interface
-		/// <code> foreach (IRaycastableGraph graph in AstarPath.data.GetRaycastableGraphs ()) {
-		///  //Do something with the graph
-		/// } </code>
-		/// See: Pathfinding.IRaycastableGraph
-		/// Deprecated: Deprecated because it is not used by the package internally and the use cases are few. Iterate through the <see cref="graphs"/> array instead.
-		/// </summary>
-		[System.Obsolete("Obsolete because it is not used by the package internally and the use cases are few. Iterate through the graphs array instead.")]
-		public IEnumerable GetRaycastableGraphs () {
-			if (graphs == null) yield break;
-			for (int i = 0; i < graphs.Length; i++) {
-				if (graphs[i] is IRaycastableGraph) {
 					yield return graphs[i];
 				}
 			}

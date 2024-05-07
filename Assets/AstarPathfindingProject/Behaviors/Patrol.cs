@@ -13,7 +13,7 @@ namespace Pathfinding {
 	/// See: <see cref="Pathfinding.AILerp"/>
 	/// </summary>
 	[UniqueComponent(tag = "ai.destination")]
-	[HelpURL("http://arongranberg.com/astar/docs/class_pathfinding_1_1_patrol.php")]
+	[HelpURL("https://arongranberg.com/astar/documentation/stable/class_pathfinding_1_1_patrol.php")]
 	public class Patrol : VersionedMonoBehaviour {
 		/// <summary>Target points to move to in order</summary>
 		public Transform[] targets;
@@ -21,11 +21,18 @@ namespace Pathfinding {
 		/// <summary>Time in seconds to wait at each target</summary>
 		public float delay = 0;
 
+		/// <summary>
+		/// If true, the agent's destination will be updated every frame instead of only when switching targets.
+		///
+		/// This is good if you have moving targets, but is otherwise unnecessary and slightly slower.
+		/// </summary>
+		public bool updateDestinationEveryFrame = false;
+
 		/// <summary>Current target index</summary>
-		int index;
+		int index = -1;
 
 		IAstarAI agent;
-		float switchTime = float.PositiveInfinity;
+		float switchTime = float.NegativeInfinity;
 
 		protected override void Awake () {
 			base.Awake();
@@ -36,8 +43,6 @@ namespace Pathfinding {
 		void Update () {
 			if (targets.Length == 0) return;
 
-			bool search = false;
-
 			// Note: using reachedEndOfPath and pathPending instead of reachedDestination here because
 			// if the destination cannot be reached by the agent, we don't want it to get stuck, we just want it to get as close as possible and then move on.
 			if (agent.reachedEndOfPath && !agent.pathPending && float.IsPositiveInfinity(switchTime)) {
@@ -45,15 +50,16 @@ namespace Pathfinding {
 			}
 
 			if (Time.time >= switchTime) {
-				index = index + 1;
-				search = true;
+				index++;
 				switchTime = float.PositiveInfinity;
+
+				index = index % targets.Length;
+				agent.destination = targets[index].position;
+				agent.SearchPath();
+			} else if (updateDestinationEveryFrame) {
+				index = index % targets.Length;
+				agent.destination = targets[index].position;
 			}
-
-			index = index % targets.Length;
-			agent.destination = targets[index].position;
-
-			if (search) agent.SearchPath();
 		}
 	}
 }

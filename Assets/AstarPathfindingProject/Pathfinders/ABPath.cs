@@ -4,8 +4,8 @@ using System.Collections.Generic;
 namespace Pathfinding {
 	/// <summary>
 	/// Basic path, finds the shortest path from A to B.
-	/// \ingroup paths
-	/// This is the most basic path object it will try to find the shortest path between two points.\n
+	///
+	/// This is the most basic path object it will try to find the shortest path between two points.
 	/// Many other path types inherit from this type.
 	/// See: Seeker.StartPath
 	/// See: calling-pathfinding (view in online documentation for working links)
@@ -37,9 +37,21 @@ namespace Pathfinding {
 		public Vector3 endPoint;
 
 		/// <summary>
+		/// Total cost of this path as used by the pathfinding algorithm.
+		///
+		/// The cost is influenced by both the length of the path, as well as any tags or penalties on the nodes.
+		/// By default, the cost to move 1 world unit is <see cref="Int3.Precision"/>.
+		///
+		/// If the path failed, the cost will be set to zero.
+		///
+		/// See: tags (view in online documentation for working links)
+		/// </summary>
+		public uint cost;
+
+		/// <summary>
 		/// Determines if a search for an end node should be done.
 		/// Set by different path types.
-		/// \since Added in 3.0.8.3
+		/// Since: Added in 3.0.8.3
 		/// </summary>
 		protected virtual bool hasEndPoint {
 			get {
@@ -47,7 +59,8 @@ namespace Pathfinding {
 			}
 		}
 
-		public Int3 startIntPoint; /// <summary>< Start point in integer coordinates</summary>
+		/// <summary>Start point in integer coordinates</summary>
+		public Int3 startIntPoint;
 
 		/// <summary>
 		/// Calculate partial path if the target node cannot be reached.
@@ -57,14 +70,17 @@ namespace Pathfinding {
 		/// If a partial path is found, CompleteState is set to Partial.
 		/// Note: It is not required by other path types to respect this setting
 		///
-		/// Warning: This feature is currently a work in progress and may not work in the current version
+		/// The <see cref="endNode"/> and <see cref="endPoint"/> will be modified and be set to the node which ends up being closest to the target.
+		///
+		/// Warning: Using this may make path calculations significantly slower if you have a big graph. The reason is that
+		/// when the target node cannot be reached, the path must search through every single other node that it can reach in order
+		/// to determine which one is closest. This may be expensive, and is why this option is disabled by default.
 		/// </summary>
 		public bool calculatePartial;
 
 		/// <summary>
 		/// Current best target for the partial path.
 		/// This is the node with the lowest H score.
-		/// Warning: This feature is currently a work in progress and may not work in the current version
 		/// </summary>
 		protected PathNode partialBestTarget;
 
@@ -177,7 +193,7 @@ namespace Pathfinding {
 			hTarget = (Int3)end;
 		}
 
-		internal override uint GetConnectionSpecialCost (GraphNode a, GraphNode b, uint currentCost) {
+		public override uint GetConnectionSpecialCost (GraphNode a, GraphNode b, uint currentCost) {
 			if (startNode != null && endNode != null) {
 				if (a == startNode) {
 					return (uint)((startIntPoint - (b == endNode ? hTarget : b.position)).costMagnitude * (currentCost*1.0/(a.position-b.position).costMagnitude));
@@ -223,6 +239,7 @@ namespace Pathfinding {
 			startIntPoint = new Int3();
 			hTarget = new Int3();
 			endNodeCosts = null;
+			cost = 0;
 
 #if !ASTAR_NO_GRID_GRAPH
 			gridSpecialCaseNode = null;
@@ -387,8 +404,6 @@ namespace Pathfinding {
 
 		/// <summary>Prepares the path. Searches for start and end nodes and does some simple checking if a path is at all possible</summary>
 		protected override void Prepare () {
-			AstarProfiler.StartProfile("Get Nearest");
-
 			//Initialize the NNConstraint
 			nnConstraint.tags = enabledTags;
 			var startNNInfo  = AstarPath.active.GetNearest(startPoint, nnConstraint);
@@ -454,8 +469,6 @@ namespace Pathfinding {
 					pathHandler.GetPathNode(endNode).flag1 = true;
 				}
 			}
-
-			AstarProfiler.EndProfile();
 		}
 
 		/// <summary>
@@ -502,10 +515,9 @@ namespace Pathfinding {
 			// Any nodes left to search?
 			if (pathHandler.heap.isEmpty) {
 				if (calculatePartial) {
-					CompleteState = PathCompleteState.Partial;
-					Trace(partialBestTarget);
+					CompletePartial(partialBestTarget);
 				} else {
-					FailWithError("No open points, the start node didn't open any nodes");
+					FailWithError("The start node either had no neighbours, or no neighbours that the path could traverse");
 				}
 				return;
 			}
@@ -546,6 +558,20 @@ namespace Pathfinding {
 #endif
 		}
 
+		void CompletePartial (PathNode node) {
+			// We will change the end node, so we have to clean up the previous end node to not
+			// leave it with stale data.
+			var pathEndNode = pathHandler.GetPathNode(endNode);
+			pathEndNode.flag1 = false;
+			pathEndNode.flag2 = false;
+
+			CompleteState = PathCompleteState.Partial;
+			endNode = node.node;
+			endPoint = endNode.ClosestPointOnNode(originalEndPoint);
+			cost = pathEndNode.G;
+			Trace(node);
+		}
+
 		/// <summary>
 		/// Completes the path using the specified target node.
 		/// This method assumes that the node is a target node of the path
@@ -579,6 +605,7 @@ namespace Pathfinding {
 			// been stripped out with ASTAR_NO_GRID_GRAPH
 			node.MustBeEqual(endNode);
 #endif
+			cost = pathHandler.GetPathNode(endNode).G;
 			// Mark the path as completed
 			CompleteState = PathCompleteState.Complete;
 		}
@@ -624,28 +651,21 @@ namespace Pathfinding {
 					partialBestTarget = currentR;
 				}
 
-				AstarProfiler.StartFastProfile(4);
-
 				// Loop through all walkable neighbours of the node and add them to the open list.
 				currentR.node.Open(this, currentR, pathHandler);
-
-				AstarProfiler.EndFastProfile(4);
 
 				// Any nodes left to search?
 				if (pathHandler.heap.isEmpty) {
 					if (calculatePartial && partialBestTarget != null) {
-						CompleteState = PathCompleteState.Partial;
-						Trace(partialBestTarget);
+						CompletePartial(partialBestTarget);
 					} else {
-						FailWithError("Searched whole area but could not find target");
+						FailWithError("Searched all reachable nodes, but could not find target. This can happen if you have nodes with a different tag blocking the way to the goal. You can enable path.calculatePartial to handle that case workaround (though this comes with a performance cost).");
 					}
 					return;
 				}
 
 				// Select the node with the lowest F score and remove it from the open list
-				AstarProfiler.StartFastProfile(7);
 				currentR = pathHandler.heap.Remove();
-				AstarProfiler.EndFastProfile(7);
 
 				// Check for time every 500 nodes, roughly every 0.5 ms usually
 				if (counter > 500) {
@@ -665,20 +685,15 @@ namespace Pathfinding {
 				counter++;
 			}
 
-			AstarProfiler.StartProfile("Trace");
-
 			if (CompleteState == PathCompleteState.Complete) {
 				Trace(currentR);
 			} else if (calculatePartial && partialBestTarget != null) {
-				CompleteState = PathCompleteState.Partial;
-				Trace(partialBestTarget);
+				CompletePartial(partialBestTarget);
 			}
-
-			AstarProfiler.EndProfile();
 		}
 
 		/// <summary>Returns a debug string for this path.</summary>
-		internal override string DebugString (PathLog logMode) {
+		protected override string DebugString (PathLog logMode) {
 			if (logMode == PathLog.None || (!error && logMode == PathLog.OnlyErrors)) {
 				return "";
 			}

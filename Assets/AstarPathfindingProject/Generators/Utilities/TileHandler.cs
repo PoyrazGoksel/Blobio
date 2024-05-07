@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Pathfinding.ClipperLib;
-#if UNITY_5_5_OR_NEWER
 using UnityEngine.Profiling;
-#endif
 
 namespace Pathfinding.Util {
 	using Pathfinding;
@@ -410,8 +408,8 @@ namespace Pathfinding.Util {
 			// Nothing to do here
 			if (verts.Length == 0 || tris.Length == 0) {
 				return new CuttingResult {
-						   verts = ArrayPool<Int3>.Claim (0),
-						   tris = ArrayPool<int>.Claim (0)
+						   verts = ArrayPool<Int3>.Claim(0),
+						   tris = ArrayPool<int>.Claim(0)
 				};
 			}
 
@@ -444,7 +442,7 @@ namespace Pathfinding.Util {
 			var cutRegionSize = new Vector2(graphSpaceBounds.size.x, graphSpaceBounds.size.z);
 
 			if ((mode & CutMode.CutExtra) != 0) {
-				extraClipShape = ListPool<IntPoint>.Claim (extraShape.Length);
+				extraClipShape = ListPool<IntPoint>.Claim(extraShape.Length);
 				for (int i = 0; i < extraShape.Length; i++) {
 					var p = transform.InverseTransform(extraShape[i]);
 					extraClipShape.Add(new IntPoint(p.x, p.z));
@@ -462,31 +460,31 @@ namespace Pathfinding.Util {
 			List<NavmeshCut> navmeshCuts;
 			if (mode == CutMode.CutExtra) {
 				// Not needed when only cutting extra
-				navmeshCuts = ListPool<NavmeshCut>.Claim ();
+				navmeshCuts = ListPool<NavmeshCut>.Claim();
 			} else {
 				navmeshCuts = cuts.QueryRect<NavmeshCut>(tiles);
 			}
 
 			// Find all NavmeshAdd components that could be inside the bounds
 			List<NavmeshAdd> navmeshAdds = cuts.QueryRect<NavmeshAdd>(tiles);
-			var intersectingCuts = ListPool<int>.Claim ();
+			var intersectingCuts = ListPool<int>.Claim();
 
 			var cutInfos = PrepareNavmeshCutsForCutting(navmeshCuts, transform, bounds, perturbate, navmeshAdds.Count > 0);
 
-			var outverts = ListPool<Int3>.Claim (verts.Length*2);
-			var outtris = ListPool<int>.Claim (tris.Length);
+			var outverts = ListPool<Int3>.Claim(verts.Length*2);
+			var outtris = ListPool<int>.Claim(tris.Length);
 
 			if (navmeshCuts.Count == 0 && navmeshAdds.Count == 0 && (mode & ~(CutMode.CutAll | CutMode.CutDual)) == 0 && (mode & CutMode.CutAll) != 0) {
 				// Fast path for the common case, no cuts or adds to the navmesh, so we just copy the vertices
 				CopyMesh(verts, tris, outverts, outtris);
 			} else {
-				var poly = ListPool<IntPoint>.Claim ();
+				var poly = ListPool<IntPoint>.Claim();
 				var point2Index = new Dictionary<TriangulationPoint, int>();
-				var polypoints = ListPool<Poly2Tri.PolygonPoint>.Claim ();
+				var polypoints = ListPool<Poly2Tri.PolygonPoint>.Claim();
 
 				var clipResult = new Pathfinding.ClipperLib.PolyTree();
-				var intermediateClipResult = ListPool<List<IntPoint> >.Claim ();
-				var polyCache = StackPool<Poly2Tri.Polygon>.Claim ();
+				var intermediateClipResult = ListPool<List<IntPoint> >.Claim();
+				var polyCache = StackPool<Poly2Tri.Polygon>.Claim();
 
 				// If we failed the previous iteration
 				// use a higher quality cutting
@@ -702,11 +700,11 @@ namespace Pathfinding.Util {
 					}
 				}
 
-				if (vertexBuffer != null) ArrayPool<Int3>.Release (ref vertexBuffer);
-				StackPool<Poly2Tri.Polygon>.Release (polyCache);
-				ListPool<List<IntPoint> >.Release (ref intermediateClipResult);
-				ListPool<IntPoint>.Release (ref poly);
-				ListPool<Poly2Tri.PolygonPoint>.Release (ref polypoints);
+				if (vertexBuffer != null) ArrayPool<Int3>.Release(ref vertexBuffer);
+				StackPool<Poly2Tri.Polygon>.Release(polyCache);
+				ListPool<List<IntPoint> >.Release(ref intermediateClipResult);
+				ListPool<IntPoint>.Release(ref poly);
+				ListPool<Poly2Tri.PolygonPoint>.Release(ref polypoints);
 			}
 
 			// This next step will remove all duplicate vertices in the data (of which there are quite a few)
@@ -720,16 +718,16 @@ namespace Pathfinding.Util {
 			}
 
 			// Release back to pools
-			ListPool<Int3>.Release (ref outverts);
-			ListPool<int>.Release (ref outtris);
-			ListPool<int>.Release (ref intersectingCuts);
+			ListPool<Int3>.Release(ref outverts);
+			ListPool<int>.Release(ref outtris);
+			ListPool<int>.Release(ref intersectingCuts);
 
 			for (int i = 0; i < cutInfos.Count; i++) {
-				ListPool<IntPoint>.Release (cutInfos[i].contour);
+				ListPool<IntPoint>.Release(cutInfos[i].contour);
 			}
 
-			ListPool<Cut>.Release (ref cutInfos);
-			ListPool<NavmeshCut>.Release (ref navmeshCuts);
+			ListPool<Cut>.Release(ref cutInfos);
+			ListPool<NavmeshCut>.Release(ref navmeshCuts);
 			return result;
 		}
 
@@ -745,8 +743,8 @@ namespace Pathfinding.Util {
 				rnd = new System.Random();
 			}
 
-			var contourBuffer = ListPool<List<Vector3> >.Claim ();
-			var result = ListPool<Cut>.Claim ();
+			var contourBuffer = ListPool<List<Vector3> >.Claim();
+			var result = ListPool<Cut>.Claim();
 			for (int i = 0; i < navmeshCuts.Count; i++) {
 				// Generate random perturbation for this obstacle if required
 				Int2 perturbation = new Int2(0, 0);
@@ -774,7 +772,7 @@ namespace Pathfinding.Util {
 					}
 
 					// TODO: transform should include cutting offset
-					List<IntPoint> contour = ListPool<IntPoint>.Claim (worldContour.Count);
+					List<IntPoint> contour = ListPool<IntPoint>.Claim(worldContour.Count);
 					for (int q = 0; q < worldContour.Count; q++) {
 						var p = (Int3)transform.InverseTransform(worldContour[q]);
 						if (perturbate > 0) {
@@ -805,7 +803,7 @@ namespace Pathfinding.Util {
 				}
 			}
 
-			ListPool<List<Vector3> >.Release (ref contourBuffer);
+			ListPool<List<Vector3> >.Release(ref contourBuffer);
 			return result;
 		}
 
@@ -1069,8 +1067,8 @@ namespace Pathfinding.Util {
 				activeTileTypes[x + z*tileXCount] = null;
 
 				if (!isBatching) {
-				    // Trigger post update event
-				    // This can trigger for example recalculation of navmesh links
+					// Trigger post update event
+					// This can trigger for example recalculation of navmesh links
 					context.SetGraphDirty(graph);
 				}
 
@@ -1177,9 +1175,9 @@ namespace Pathfinding.Util {
 				Profiler.EndSample();
 
 				if (!isBatching) {
-				    // Trigger post update event
-				    // This can trigger for example recalculation of navmesh links
-				    // TODO: Does this need to be inside an if statement?
+					// Trigger post update event
+					// This can trigger for example recalculation of navmesh links
+					// TODO: Does this need to be inside an if statement?
 					context.SetGraphDirty(graph);
 				}
 

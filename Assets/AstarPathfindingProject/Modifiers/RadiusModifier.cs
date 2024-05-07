@@ -5,7 +5,6 @@ using System.Collections.Generic;
 namespace Pathfinding {
 	/// <summary>
 	/// Radius path modifier for offsetting paths.
-	/// \ingroup modifiers
 	///
 	/// The radius modifier will offset the path to create the effect
 	/// of adjusting it to the characters radius.
@@ -26,10 +25,10 @@ namespace Pathfinding {
 	///
 	/// Also check out the howto page "Using Modifiers".
 	///
-	/// \since Added in 3.2.6
+	/// Since: Added in 3.2.6
 	/// </summary>
 	[AddComponentMenu("Pathfinding/Modifiers/Radius Offset")]
-	[HelpURL("http://arongranberg.com/astar/docs/class_pathfinding_1_1_radius_modifier.php")]
+	[HelpURL("https://arongranberg.com/astar/documentation/stable/class_pathfinding_1_1_radius_modifier.php")]
 	public class RadiusModifier : MonoModifier {
 #if UNITY_EDITOR
 		[UnityEditor.MenuItem("CONTEXT/Seeker/Add Radius Modifier")]
@@ -139,7 +138,7 @@ namespace Pathfinding {
 			List<Vector3> res = Apply(vs);
 
 			if (res != vs) {
-				Pathfinding.Util.ListPool<Vector3>.Release (ref p.vectorPath);
+				Pathfinding.Util.ListPool<Vector3>.Release(ref p.vectorPath);
 				p.vectorPath = res;
 			}
 		}
@@ -254,7 +253,7 @@ namespace Pathfinding {
 				}
 			}
 
-			List<Vector3> res = Pathfinding.Util.ListPool<Vector3>.Claim ();
+			List<Vector3> res = Pathfinding.Util.ListPool<Vector3>.Claim();
 			res.Add(vs[0]);
 			if (detail < 1) detail = 1;
 			float step = (float)(2*Math.PI)/detail;

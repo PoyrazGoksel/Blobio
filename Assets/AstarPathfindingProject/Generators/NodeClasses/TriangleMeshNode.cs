@@ -5,18 +5,18 @@ namespace Pathfinding {
 	/// <summary>Interface for something that holds a triangle based navmesh</summary>
 	public interface INavmeshHolder : ITransformedGraph, INavmesh {
 		/// <summary>Position of vertex number i in the world</summary>
-		Int3 GetVertex (int i);
+		Int3 GetVertex(int i);
 
 		/// <summary>
 		/// Position of vertex number i in coordinates local to the graph.
 		/// The up direction is always the +Y axis for these coordinates.
 		/// </summary>
-		Int3 GetVertexInGraphSpace (int i);
+		Int3 GetVertexInGraphSpace(int i);
 
-		int GetVertexArrayIndex (int index);
+		int GetVertexArrayIndex(int index);
 
 		/// <summary>Transforms coordinates from graph space to world space</summary>
-		void GetTileCoordinates (int tileIndex, out int x, out int z);
+		void GetTileCoordinates(int tileIndex, out int x, out int z);
 	}
 
 	/// <summary>Node represented by a triangle</summary>
@@ -186,16 +186,33 @@ namespace Pathfinding {
 
 		public override Vector3 ClosestPointOnNodeXZ (Vector3 p) {
 			// Get all 3 vertices for this node
-			Int3 tp1, tp2, tp3;
-
-			GetVertices(out tp1, out tp2, out tp3);
+			GetVertices(out Int3 tp1, out Int3 tp2, out Int3 tp3);
 			return Polygon.ClosestPointOnTriangleXZ((Vector3)tp1, (Vector3)tp2, (Vector3)tp3, p);
 		}
 
+		/// <summary>
+		/// Checks if point is inside the node when seen from above.
+		///
+		/// Note that <see cref="ContainsPointInGraphSpace"/> is faster than this method as it avoids
+		/// some coordinate transformations. If you are repeatedly calling this method
+		/// on many different nodes but with the same point then you should consider
+		/// transforming the point first and then calling ContainsPointInGraphSpace.
+		/// <code>
+		/// Int3 p = (Int3)graph.transform.InverseTransform(point);
+		///
+		/// node.ContainsPointInGraphSpace(p);
+		/// </code>
+		/// </summary>
 		public override bool ContainsPoint (Vector3 p) {
 			return ContainsPointInGraphSpace((Int3)GetNavmeshHolder(GraphIndex).transform.InverseTransform(p));
 		}
 
+		/// <summary>
+		/// Checks if point is inside the node in graph space.
+		///
+		/// In graph space the up direction is always the Y axis so in principle
+		/// we project the triangle down on the XZ plane and check if the point is inside the 2D triangle there.
+		/// </summary>
 		public override bool ContainsPointInGraphSpace (Int3 p) {
 			// Get all 3 vertices for this node
 			Int3 a, b, c;
@@ -293,7 +310,7 @@ namespace Pathfinding {
 		/// Returns the edge which is shared with other.
 		/// If no edge is shared, -1 is returned.
 		/// If there is a connection with the other node, but the connection is not marked as using a particular edge of the shape of the node
-		/// then 0xFF will be returned.
+		/// then Connection.NoSharedEdge will be returned.
 		///
 		/// The vertices in the edge can be retrieved using
 		/// <code>
@@ -334,7 +351,7 @@ namespace Pathfinding {
 			var edge = SharedEdge(toTriNode);
 
 			// A connection was found, but it specifically didn't use an edge
-			if (edge == 0xFF) return false;
+			if (edge == Connection.NoSharedEdge) return false;
 
 			// No connection was found between the nodes
 			// Check if there is a node link that connects them
@@ -385,7 +402,7 @@ namespace Pathfinding {
 				var otherEdge = toTriNode.SharedEdge(this);
 
 				// A connection was found, but it specifically didn't use an edge. This is odd since the connection in the other direction did use an edge
-				if (otherEdge == 0xFF) throw new System.Exception("Connection used edge in one direction, but not in the other direction. Has the wrong overload of AddConnection been used?");
+				if (otherEdge == Connection.NoSharedEdge) throw new System.Exception("Connection used edge in one direction, but not in the other direction. Has the wrong overload of AddConnection been used?");
 
 				// If it is -1 then it must be a one-way connection. Fall back to using the whole edge
 				if (otherEdge != -1) {

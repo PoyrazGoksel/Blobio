@@ -27,8 +27,6 @@ namespace Pathfinding {
 	/// See Pathfinding.FloodPath for examples on how to use this path type
 	///
 	/// [Open online documentation to see images]
-	///
-	/// \ingroup paths
 	/// </summary>
 	public class FloodPathTracer : ABPath {
 		/// <summary>Reference to the FloodPath which searched the path originally</summary>
@@ -56,7 +54,7 @@ namespace Pathfinding {
 		protected void Setup (Vector3 start, FloodPath flood, OnPathDelegate callback) {
 			this.flood = flood;
 
-			if (flood == null || flood.PipelineState < PathState.Returned) {
+			if (flood == null || flood.PipelineState < PathState.Returning) {
 				throw new System.ArgumentException("You must supply a calculated FloodPath to the 'flood' argument");
 			}
 

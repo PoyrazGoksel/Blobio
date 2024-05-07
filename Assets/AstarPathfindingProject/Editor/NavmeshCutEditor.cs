@@ -9,7 +9,8 @@ namespace Pathfinding {
 			EditorGUI.BeginChangeCheck();
 			var type = FindProperty("type");
 			var circleResolution = FindProperty("circleResolution");
-			PropertyField("type");
+			PropertyField("type", label: "Shape");
+			EditorGUI.indentLevel++;
 
 			if (!type.hasMultipleDifferentValues) {
 				switch ((NavmeshCut.MeshType)type.intValue) {
@@ -18,7 +19,7 @@ namespace Pathfinding {
 					PropertyField("circleResolution");
 
 					if (circleResolution.intValue >= 20) {
-						EditorGUILayout.HelpBox("Be careful with large values. It is often better with a relatively low resolution since it generates cleaner navmeshes with fewer nodes.", MessageType.Warning);
+						EditorGUILayout.HelpBox("Be careful with large resolutions. It is often better with a relatively low resolution since it generates cleaner navmeshes with fewer nodes.", MessageType.Warning);
 					}
 					break;
 				case NavmeshCut.MeshType.Rectangle:
@@ -35,6 +36,7 @@ namespace Pathfinding {
 			FloatField("height", min: 0f);
 
 			PropertyField("center");
+			EditorGUI.indentLevel--;
 
 			EditorGUILayout.Separator();
 			PropertyField("updateDistance");
@@ -47,11 +49,21 @@ namespace Pathfinding {
 			PropertyField("isDual");
 			PropertyField("cutsAddedGeom");
 
+			EditorGUI.BeginChangeCheck();
+			PropertyField("graphMask", "Affected Graphs");
+			bool changedMask = EditorGUI.EndChangeCheck();
+
 			serializedObject.ApplyModifiedProperties();
 
 			if (EditorGUI.EndChangeCheck()) {
 				foreach (NavmeshCut tg in targets) {
 					tg.ForceUpdate();
+					// If the mask is changed we disable and then enable the component
+					// to make sure it is removed from the right graphs and then added back
+					if (changedMask && tg.enabled) {
+						tg.enabled = false;
+						tg.enabled = true;
+					}
 				}
 			}
 		}

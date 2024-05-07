@@ -111,7 +111,7 @@ namespace Pathfinding {
 
 		void GetClosestWalkableNodesToChildrenRecursively (Transform tr, List<GraphNode> nodes) {
 			foreach (Transform ch in tr) {
-				var info = AstarPath.active.GetNearest(ch.position, NNConstraint.Default);
+				var info = AstarPath.active.GetNearest(ch.position, NNConstraint.Walkable);
 				if (info.node != null && info.node.Walkable) {
 					nodes.Add(info.node);
 				}
@@ -181,7 +181,7 @@ namespace Pathfinding {
 			rval = (uint)seed;
 
 			// Get a List<GraphNode> from a pool
-			var pivotList = Pathfinding.Util.ListPool<GraphNode>.Claim ();
+			var pivotList = Pathfinding.Util.ListPool<GraphNode>.Claim();
 
 			switch (mode) {
 			case HeuristicOptimizationMode.Custom:
@@ -206,7 +206,7 @@ namespace Pathfinding {
 						pivotList.Add(first);
 					} else {
 						Debug.LogError("Could not find any walkable node in any of the graphs.");
-						Pathfinding.Util.ListPool<GraphNode>.Release (ref pivotList);
+						Pathfinding.Util.ListPool<GraphNode>.Release(ref pivotList);
 						return;
 					}
 				}
@@ -221,7 +221,7 @@ namespace Pathfinding {
 
 			pivots = pivotList.ToArray();
 
-			Pathfinding.Util.ListPool<GraphNode>.Release (ref pivotList);
+			Pathfinding.Util.ListPool<GraphNode>.Release(ref pivotList);
 		}
 
 		public void RecalculateCosts () {

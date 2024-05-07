@@ -9,7 +9,6 @@ namespace Pathfinding {
 	/// See: <see cref="AstarPath.GetNearest"/>
 	/// See: <see cref="Pathfinding.GraphUpdateUtilities"/>
 	/// See: <see cref="Pathfinding.GraphUtilities"/>
-	/// \ingroup utils
 	/// </summary>
 	public static class PathUtilities {
 		/// <summary>
@@ -17,13 +16,15 @@ namespace Pathfinding {
 		/// This method is extremely fast because it only uses precalculated information.
 		///
 		/// <code>
-		/// GraphNode node1 = AstarPath.active.GetNearest(point1, NNConstraint.Default).node;
-		/// GraphNode node2 = AstarPath.active.GetNearest(point2, NNConstraint.Default).node;
+		/// GraphNode node1 = AstarPath.active.GetNearest(point1, NNConstraint.Walkable).node;
+		/// GraphNode node2 = AstarPath.active.GetNearest(point2, NNConstraint.Walkable).node;
 		///
 		/// if (PathUtilities.IsPathPossible(node1, node2)) {
 		///     // Yay, there is a path between those two nodes
 		/// }
 		/// </code>
+		///
+		/// Equivalent to calling <see cref="IsPathPossible(List<GraphNode>)"/> with a list containing node1 and node2.
 		///
 		/// See: graph-updates (view in online documentation for working links)
 		/// See: <see cref="AstarPath.GetNearest"/>
@@ -86,7 +87,7 @@ namespace Pathfinding {
 			}
 
 			// Pool the temporary list
-			ListPool<GraphNode>.Release (ref reachable);
+			ListPool<GraphNode>.Release(ref reachable);
 
 			return result;
 		}
@@ -114,8 +115,8 @@ namespace Pathfinding {
 		/// <param name="filter">Optional filter for which nodes to search. You can combine this with tagMask = -1 to make the filter determine everything.
 		///      Only walkable nodes are searched regardless of the filter. If the filter function returns false the node will be treated as unwalkable.</param>
 		public static List<GraphNode> GetReachableNodes (GraphNode seed, int tagMask = -1, System.Func<GraphNode, bool> filter = null) {
-			Stack<GraphNode> dfsStack = StackPool<GraphNode>.Claim ();
-			List<GraphNode> reachable = ListPool<GraphNode>.Claim ();
+			Stack<GraphNode> dfsStack = StackPool<GraphNode>.Claim();
+			List<GraphNode> reachable = ListPool<GraphNode>.Claim();
 
 			/// <summary>TODO: Pool</summary>
 			var map = new HashSet<GraphNode>();
@@ -146,7 +147,7 @@ namespace Pathfinding {
 				dfsStack.Pop().GetConnections(callback);
 			}
 
-			StackPool<GraphNode>.Release (dfsStack);
+			StackPool<GraphNode>.Release(dfsStack);
 			return reachable;
 		}
 
@@ -175,6 +176,14 @@ namespace Pathfinding {
 		///
 		/// The video below shows the BFS result with varying values of depth. Points are sampled on the nodes using <see cref="GetPointsOnNodes"/>.
 		/// [Open online documentation to see videos]
+		///
+		/// <code>
+		/// var seed = AstarPath.active.GetNearest(transform.position, NNConstraint.Walkable).node;
+		/// var nodes = PathUtilities.BFS(seed, 10);
+		/// foreach (var node in nodes) {
+		///     Debug.DrawRay((Vector3)node.position, Vector3.up, Color.red, 10);
+		/// }
+		/// </code>
 		/// </summary>
 		/// <param name="seed">The node to start the search from.</param>
 		/// <param name="depth">The maximum node-distance from the seed node.</param>
@@ -200,7 +209,7 @@ namespace Pathfinding {
 			que.Clear();
 			map.Clear();
 
-			List<GraphNode> result = ListPool<GraphNode>.Claim ();
+			List<GraphNode> result = ListPool<GraphNode>.Claim();
 
 			int currentDist = -1;
 			System.Action<GraphNode> callback;
@@ -260,7 +269,7 @@ namespace Pathfinding {
 		/// See: Pathfinding.Util.ListPool
 		/// </summary>
 		public static List<Vector3> GetSpiralPoints (int count, float clearance) {
-			List<Vector3> pts = ListPool<Vector3>.Claim (count);
+			List<Vector3> pts = ListPool<Vector3>.Claim(count);
 
 			// The radius of the smaller circle used for generating the involute of a circle
 			// Calculated from the separation distance between the turns
@@ -353,7 +362,7 @@ namespace Pathfinding {
 
 			if (graph == null) throw new System.ArgumentException("g is not a NavGraph");
 
-			NNInfoInternal nn = graph.GetNearestForce(center, NNConstraint.Default);
+			NNInfoInternal nn = graph.GetNearestForce(center, PathNNConstraint.Walkable);
 			center = nn.clampedPosition;
 
 			if (nn.node == null) {
@@ -381,7 +390,7 @@ namespace Pathfinding {
 				while (true) {
 					Vector3 pt = center + dir;
 
-					if (g.Linecast(center, pt, nn.node, out hit)) {
+					if (g.Linecast(center, pt, out hit)) {
 						if (hit.point == Vector3.zero) {
 							// Oops, linecast actually failed completely
 							// try again unless we have tried lots of times
@@ -448,7 +457,7 @@ namespace Pathfinding {
 			if (nodes == null) throw new System.ArgumentNullException("nodes");
 			if (nodes.Count == 0) throw new System.ArgumentException("no nodes passed");
 
-			List<Vector3> pts = ListPool<Vector3>.Claim (count);
+			List<Vector3> pts = ListPool<Vector3>.Claim(count);
 
 			// Square
 			clearanceRadius *= clearanceRadius;
@@ -459,7 +468,7 @@ namespace Pathfinding {
 #endif
 				) {
 				// Accumulated area of all nodes
-				List<float> accs = ListPool<float>.Claim (nodes.Count);
+				List<float> accs = ListPool<float>.Claim(nodes.Count);
 
 				// Total area of all nodes so far
 				float tot = 0;
@@ -522,7 +531,7 @@ namespace Pathfinding {
 					}
 				}
 
-				ListPool<float>.Release (ref accs);
+				ListPool<float>.Release(ref accs);
 			} else {
 				// Fast path, assumes all nodes have the same area (usually zero)
 				for (int i = 0; i < count; i++) {

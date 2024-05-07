@@ -12,8 +12,6 @@ namespace Pathfinding {
 	/// This modifier will adjust the endpoints of the path.
 	///
 	/// [Open online documentation to see images]
-	///
-	/// \ingroup modifiers
 	/// </summary>
 	public class StartEndModifier : PathModifier {
 		public override int Order { get { return 0; } }
@@ -199,7 +197,7 @@ namespace Pathfinding {
 			case Exactness.NodeConnection:
 				Vector3 relevantPoint;
 				if (start) {
-					relevantPoint = adjustStartPoint != null? adjustStartPoint () : path.originalStartPoint;
+					relevantPoint = adjustStartPoint != null? adjustStartPoint() : path.originalStartPoint;
 				} else {
 					relevantPoint = path.originalEndPoint;
 				}
@@ -232,6 +230,7 @@ namespace Pathfinding {
 					// will change during iteration
 					for (int i = connectionBuffer.Count - 1; i >= 0; i--) {
 						var neighbour = connectionBuffer[i];
+						if (!path.CanTraverse(neighbour)) continue;
 
 						// Find the closest point on the connection between the nodes
 						// and check if the distance to that point is lower than the previous best
@@ -272,7 +271,7 @@ namespace Pathfinding {
 
 				if (rayGraph != null) {
 					GraphHitInfo graphHit;
-					if (rayGraph.Linecast(from, point, hint, out graphHit)) {
+					if (rayGraph.Linecast(from, point, out graphHit)) {
 						point = graphHit.point;
 					}
 				}

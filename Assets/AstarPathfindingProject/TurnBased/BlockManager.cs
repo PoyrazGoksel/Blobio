@@ -12,8 +12,9 @@ namespace Pathfinding {
 	///
 	/// See: TurnBasedAI
 	/// See: turnbased (view in online documentation for working links)
+	/// See: traversal_provider (view in online documentation for working links)
 	/// </summary>
-	[HelpURL("http://arongranberg.com/astar/docs/class_pathfinding_1_1_block_manager.php")]
+	[HelpURL("https://arongranberg.com/astar/documentation/stable/class_pathfinding_1_1_block_manager.php")]
 	public class BlockManager : VersionedMonoBehaviour {
 		/// <summary>Contains info on which SingleNodeBlocker objects have blocked a particular node</summary>
 		Dictionary<GraphNode, List<SingleNodeBlocker> > blocked = new Dictionary<GraphNode, List<SingleNodeBlocker> >();

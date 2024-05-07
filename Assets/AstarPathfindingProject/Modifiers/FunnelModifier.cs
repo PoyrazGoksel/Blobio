@@ -15,10 +15,9 @@ namespace Pathfinding {
 	/// simplify the path as much as you would like it to. The <see cref="Pathfinding.RaycastModifier"/> can be a better fit for grid graphs.
 	/// [Open online documentation to see images]
 	///
-	/// \ingroup modifiers
 	/// See: http://digestingduck.blogspot.se/2010/03/simple-stupid-funnel-algorithm.html
 	/// </summary>
-	[HelpURL("http://arongranberg.com/astar/docs/class_pathfinding_1_1_funnel_modifier.php")]
+	[HelpURL("https://arongranberg.com/astar/documentation/stable/class_pathfinding_1_1_funnel_modifier.php")]
 	public class FunnelModifier : MonoModifier {
 		/// <summary>
 		/// Determines if twists and bends should be straightened out before running the funnel algorithm.
@@ -60,7 +59,7 @@ namespace Pathfinding {
 				return;
 			}
 
-			List<Vector3> funnelPath = ListPool<Vector3>.Claim ();
+			List<Vector3> funnelPath = ListPool<Vector3>.Claim();
 
 			// Split the path into different parts (separated by custom links)
 			// and run the funnel algorithm on each of them in turn
@@ -82,9 +81,9 @@ namespace Pathfinding {
 					var portals = Funnel.ConstructFunnelPortals(p.path, part);
 					var result = Funnel.Calculate(portals, unwrap, splitAtEveryPortal);
 					funnelPath.AddRange(result);
-					ListPool<Vector3>.Release (ref portals.left);
-					ListPool<Vector3>.Release (ref portals.right);
-					ListPool<Vector3>.Release (ref result);
+					ListPool<Vector3>.Release(ref portals.left);
+					ListPool<Vector3>.Release(ref portals.right);
+					ListPool<Vector3>.Release(ref result);
 				} else {
 					// non-link parts will add the start/end points for the adjacent parts.
 					// So if there is no non-link part before this one, then we need to add the start point of the link
@@ -99,9 +98,9 @@ namespace Pathfinding {
 			}
 
 			UnityEngine.Assertions.Assert.IsTrue(funnelPath.Count >= 1);
-			ListPool<Funnel.PathPart>.Release (ref parts);
+			ListPool<Funnel.PathPart>.Release(ref parts);
 			// Pool the previous vectorPath
-			ListPool<Vector3>.Release (ref p.vectorPath);
+			ListPool<Vector3>.Release(ref p.vectorPath);
 			p.vectorPath = funnelPath;
 		}
 	}

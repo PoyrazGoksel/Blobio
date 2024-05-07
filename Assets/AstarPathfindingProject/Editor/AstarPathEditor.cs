@@ -37,16 +37,16 @@ namespace Pathfinding {
 		static bool customAreaColorsOpen;
 		static bool editTags;
 
-		static FadeArea settingsArea;
-		static FadeArea colorSettingsArea;
-		static FadeArea editorSettingsArea;
-		static FadeArea aboutArea;
-		static FadeArea optimizationSettingsArea;
-		static FadeArea serializationSettingsArea;
-		static FadeArea tagsArea;
-		static FadeArea graphsArea;
-		static FadeArea addGraphsArea;
-		static FadeArea alwaysVisibleArea;
+		FadeArea settingsArea;
+		FadeArea colorSettingsArea;
+		FadeArea editorSettingsArea;
+		FadeArea aboutArea;
+		FadeArea optimizationSettingsArea;
+		FadeArea serializationSettingsArea;
+		FadeArea tagsArea;
+		FadeArea graphsArea;
+		FadeArea addGraphsArea;
+		FadeArea alwaysVisibleArea;
 
 		#endregion
 
@@ -77,6 +77,9 @@ namespace Pathfinding {
 
 			// Make sure all references are set up to avoid NullReferenceExceptions
 			script.ConfigureReferencesInternal();
+
+			// Hide position/rotation/scale tools for the AstarPath object. Instead, OnSceneGUI will draw position tools for each graph
+			Tools.hidden = true;
 
 			Undo.undoRedoPerformed += OnUndoRedoPerformed;
 
@@ -126,8 +129,11 @@ namespace Pathfinding {
 
 			SetAstarEditorSettings();
 			CheckGraphEditors();
+			Tools.hidden = false;
 
 			SaveGraphsAndUndo();
+
+			script = null;
 		}
 
 		/// <summary>Reads settings frome EditorPrefs</summary>
@@ -137,80 +143,6 @@ namespace Pathfinding {
 
 		void SetAstarEditorSettings () {
 			EditorPrefs.SetBool("EditorGUILayoutx.fancyEffects", FadeArea.fancyEffects);
-		}
-
-		/// <summary>Checks if JS support is enabled. This is done by checking if the directory 'Assets/AstarPathfindingEditor/Editor' exists</summary>
-		static bool IsJsEnabled () {
-			return System.IO.Directory.Exists(Application.dataPath+"/AstarPathfindingEditor/Editor");
-		}
-
-		/// <summary>
-		/// Enables JS support.
-		/// This is done by restructuring folders in the project.
-		/// See: javascript (view in online documentation for working links)
-		/// </summary>
-		static void EnableJs () {
-			// Path to the project folder (with /Assets at the end)
-			string projectPath = Application.dataPath;
-
-			if (projectPath.EndsWith("/Assets")) {
-				projectPath = projectPath.Remove(projectPath.Length-("Assets".Length));
-			}
-
-			if (!System.IO.Directory.Exists(projectPath + scriptsFolder)) {
-				string error = "Could not enable Js support. AstarPathfindingProject folder did not exist in the default location.\n" +
-							   "If you get this message and the AstarPathfindingProject is not at the root of your Assets folder (i.e at Assets/AstarPathfindingProject)" +
-							   " then you should move it to the root";
-
-				Debug.LogError(error);
-				EditorUtility.DisplayDialog("Could not enable Js support", error, "ok");
-				return;
-			}
-
-			if (!System.IO.Directory.Exists(Application.dataPath+"/AstarPathfindingEditor")) {
-				System.IO.Directory.CreateDirectory(Application.dataPath+"/AstarPathfindingEditor");
-				AssetDatabase.Refresh();
-			}
-			if (!System.IO.Directory.Exists(Application.dataPath+"/Plugins")) {
-				System.IO.Directory.CreateDirectory(Application.dataPath+"/Plugins");
-				AssetDatabase.Refresh();
-			}
-
-
-			AssetDatabase.MoveAsset(scriptsFolder + "/Editor", "Assets/AstarPathfindingEditor/Editor");
-			AssetDatabase.MoveAsset(scriptsFolder, "Assets/Plugins/AstarPathfindingProject");
-			AssetDatabase.Refresh();
-		}
-
-		/// <summary>Disables JS support if it was enabled. This is done by restructuring folders in the project</summary>
-		static void DisableJs () {
-			if (System.IO.Directory.Exists(Application.dataPath+"/Plugins/AstarPathfindingProject")) {
-				string error = AssetDatabase.MoveAsset("Assets/Plugins/AstarPathfindingProject", scriptsFolder);
-				if (error != "") {
-					Debug.LogError("Couldn't disable Js - "+error);
-				} else {
-					try {
-						System.IO.Directory.Delete(Application.dataPath+"/Plugins");
-					} catch (System.Exception) {}
-				}
-			} else {
-				Debug.LogWarning("Could not disable JS - Could not find directory '"+Application.dataPath+"/Plugins/AstarPathfindingProject'");
-			}
-
-			if (System.IO.Directory.Exists(Application.dataPath+"/AstarPathfindingEditor/Editor")) {
-				string error = AssetDatabase.MoveAsset("Assets/AstarPathfindingEditor/Editor", scriptsFolder + "/Editor");
-				if (error != "") {
-					Debug.LogError("Couldn't disable Js - "+error);
-				} else {
-					try {
-						System.IO.Directory.Delete(Application.dataPath+"/AstarPathfindingEditor");
-					} catch (System.Exception) {}
-				}
-			} else {
-				Debug.LogWarning("Could not disable JS - Could not find directory '"+Application.dataPath+"/AstarPathfindingEditor/Editor'");
-			}
-
-			AssetDatabase.Refresh();
 		}
 
 		/// <summary>
@@ -237,6 +169,16 @@ namespace Pathfinding {
 					"Skin loading is done in the AstarPathEditor.cs --> LoadStyles method", MessageType.Error);
 				return;
 			}
+
+#if UNITY_2020_1_OR_NEWER
+			if (UnityEditor.EditorSettings.enterPlayModeOptionsEnabled && (UnityEditor.EditorSettings.enterPlayModeOptions & EnterPlayModeOptions.DisableSceneReload) != 0) {
+				EditorGUILayout.HelpBox("The enter play mode option 'Scene Reload' must be enabled. This package does not support it being disabled. Disabling domain reload is supported however.", MessageType.Error);
+				if (GUILayout.Button("Enable the Scene Reload option")) {
+					UnityEditor.EditorSettings.enterPlayModeOptions &= ~EnterPlayModeOptions.DisableSceneReload;
+				}
+				EditorGUILayout.Separator();
+			}
+#endif
 
 #if ASTAR_ATAVISM
 			EditorGUILayout.HelpBox("This is a special version of the A* Pathfinding Project for Atavism. This version only supports scanning recast graphs and exporting them, but no pathfinding during runtime.", MessageType.Info);
@@ -265,14 +207,6 @@ namespace Pathfinding {
 				MenuScan();
 			}
 
-
-#if ProfileAstar
-			if (GUILayout.Button("Log Profiles")) {
-				AstarProfiler.PrintResults();
-				AstarProfiler.PrintFastResults();
-				AstarProfiler.Reset();
-			}
-#endif
 
 			// Handle undo
 			SaveGraphsAndUndo(storedEventType, storedEventCommand);
@@ -466,7 +400,7 @@ namespace Pathfinding {
 			// Check if the latest version is newer than this version
 			if (FullyDefinedVersion(newVersion) > FullyDefinedVersion(AstarPath.Version)) {
 				GUIUtilityx.PushTint(Color.green);
-				if (GUILayout.Button((beta ? "Beta" : "New") + " Version Available! "+newVersion, thinHelpBox, GUILayout.Height(15))) {
+				if (GUILayout.Button((beta ? "Beta" : "New") + " Version Available! "+newVersion, thinHelpBox, GUILayout.Height(16))) {
 					Application.OpenURL(AstarUpdateChecker.GetURL("download"));
 				}
 				GUIUtilityx.PopTint();
@@ -547,7 +481,9 @@ namespace Pathfinding {
 				}
 			}
 
+#pragma warning disable 0618
 			if (script.prioritizeGraphs) {
+#pragma warning restore 0618
 				var moveUp = GUILayout.Button(new GUIContent("Up", "Increase the graph priority"), GUILayout.Width(40));
 				var moveDown = GUILayout.Button(new GUIContent("Down", "Decrease the graph priority"), GUILayout.Width(40));
 
@@ -766,7 +702,7 @@ namespace Pathfinding {
 
 			if (script.data.cacheStartup && script.data.file_cachedStartup != null) {
 				GUIUtilityx.PushTint(Color.yellow);
-				GUILayout.Label("Startup cached", thinHelpBox, GUILayout.Height(15));
+				GUILayout.Label("Startup cached", thinHelpBox, GUILayout.Height(16));
 				GUILayout.Space(20);
 				GUIUtilityx.PopTint();
 			}
@@ -813,16 +749,6 @@ namespace Pathfinding {
 				}
 
 				GUILayout.EndHorizontal();
-
-				if (script.data.data_cachedStartup != null && script.data.data_cachedStartup.Length > 0) {
-					EditorGUILayout.HelpBox("Storing the cached starup data on the AstarPath object has been deprecated. It is now stored " +
-						"in a separate file.", MessageType.Error);
-
-					if (GUILayout.Button("Transfer cache data to separate file")) {
-						script.data.file_cachedStartup = SaveGraphData(script.data.data_cachedStartup);
-						script.data.data_cachedStartup = null;
-					}
-				}
 
 				GUILayout.Space(5);
 
@@ -941,6 +867,7 @@ namespace Pathfinding {
 				script.navmeshUpdates.updateInterval = EditorGUILayout.FloatField(new GUIContent("Navmesh Cutting Update Interval (s)", "How often to check if any navmesh cut has changed."), script.navmeshUpdates.updateInterval);
 			}
 
+#pragma warning disable 0618
 			script.prioritizeGraphs = EditorGUILayout.Toggle(new GUIContent("Prioritize Graphs", "Normally, the system will search for the closest node in all graphs and choose the closest one" +
 				"but if Prioritize Graphs is enabled, the first graph which has a node closer than Priority Limit will be chosen and additional search (e.g for the closest WALKABLE node) will be carried out on that graph only"),
 				script.prioritizeGraphs);
@@ -949,6 +876,7 @@ namespace Pathfinding {
 				script.prioritizeGraphsLimit = EditorGUILayout.FloatField("Priority Limit", script.prioritizeGraphsLimit);
 				EditorGUI.indentLevel--;
 			}
+#pragma warning restore 0618
 
 			script.fullGetNearestSearch = EditorGUILayout.Toggle(new GUIContent("Full Get Nearest Node Search", "Forces more accurate searches on all graphs. " +
 				"Normally only the closest graph in the initial fast check will perform additional searches, " +
@@ -959,8 +887,15 @@ namespace Pathfinding {
 			alwaysVisibleArea.End();
 		}
 
+		readonly string[] heuristicOptimizationOptions = new [] {
+			"None",
+			"Random (low quality)",
+			"RandomSpreadOut (high quality)",
+			"Custom"
+		};
+
 		void DrawHeuristicOptimizationSettings () {
-			script.euclideanEmbedding.mode = (HeuristicOptimizationMode)EditorGUILayout.EnumPopup(new GUIContent("Heuristic Optimization"), script.euclideanEmbedding.mode);
+			script.euclideanEmbedding.mode = (HeuristicOptimizationMode)EditorGUILayout.Popup(new GUIContent("Heuristic Optimization"), (int)script.euclideanEmbedding.mode, heuristicOptimizationOptions);
 
 			EditorGUI.indentLevel++;
 			if (script.euclideanEmbedding.mode == HeuristicOptimizationMode.Random) {
@@ -1030,16 +965,6 @@ namespace Pathfinding {
 
 			if (editorSettingsArea.BeginFade()) {
 				FadeArea.fancyEffects = EditorGUILayout.Toggle("Smooth Transitions", FadeArea.fancyEffects);
-
-				if (IsJsEnabled()) {
-					if (GUILayout.Button(new GUIContent("Disable Js Support", "Revert to only enable pathfinding calls from C#"))) {
-						DisableJs();
-					}
-				} else {
-					if (GUILayout.Button(new GUIContent("Enable Js Support", "Folders can be restructured to enable pathfinding calls from Js instead of just from C#"))) {
-						EnableJs();
-					}
-				}
 			}
 
 			editorSettingsArea.End();
@@ -1253,7 +1178,12 @@ namespace Pathfinding {
 			GraphEditor result;
 
 			if (graphEditorTypes.ContainsKey(graphType)) {
-				result = System.Activator.CreateInstance(graphEditorTypes[graphType].editorType) as GraphEditor;
+				var graphEditorType = graphEditorTypes[graphType].editorType;
+				result = System.Activator.CreateInstance(graphEditorType) as GraphEditor;
+
+				// Deserialize editor settings
+				var editorData = (graph as IGraphInternals).SerializedEditorSettings;
+				if (editorData != null) Pathfinding.Serialization.TinyJsonDeserializer.Deserialize(editorData, graphEditorType, result, script.gameObject);
 			} else {
 				Debug.LogError("Couldn't find an editor for the graph type '" + graphType + "' There are " + graphEditorTypes.Count + " available graph editors");
 				result = new GraphEditor();
@@ -1263,6 +1193,7 @@ namespace Pathfinding {
 			result.fadeArea = new FadeArea(graph.open, this, level1AreaStyle, level1LabelStyle);
 			result.infoFadeArea = new FadeArea(graph.infoScreenOpen, this, null, null);
 			result.target = graph;
+
 			result.OnEnable();
 			return result;
 		}
@@ -1399,11 +1330,6 @@ namespace Pathfinding {
 				script.data.DeserializeGraphs(bytes);
 				// Make sure every graph has a graph editor
 				CheckGraphEditors();
-				// Deserialize editor settings
-				for (int i = 0; i < graphEditors.Length; i++) {
-					var data = (graphEditors[i].target as IGraphInternals).SerializedEditorSettings;
-					if (data != null) Pathfinding.Serialization.TinyJsonDeserializer.Deserialize(data, graphEditors[i].GetType(), graphEditors[i]);
-				}
 			} catch (System.Exception e) {
 				Debug.LogError("Failed to deserialize graphs");
 				Debug.LogException(e);
@@ -1435,6 +1361,10 @@ namespace Pathfinding {
 						lastMessageTime = Time.realtimeSinceStartup;
 					}
 				}
+
+				// Repaint the game view in addition to just the scene view.
+				// In case the user only has the game view open it's nice to refresh it so they can see the graph.
+				UnityEditorInternal.InternalEditorUtility.RepaintAllViews();
 			} catch (System.Exception e) {
 				Debug.LogError("There was an error generating the graphs:\n"+e+"\n\nIf you think this is a bug, please contact me on forum.arongranberg.com (post a new thread)\n");
 				EditorUtility.DisplayDialog("Error Generating Graphs", "There was an error when generating graphs, check the console for more info", "Ok");

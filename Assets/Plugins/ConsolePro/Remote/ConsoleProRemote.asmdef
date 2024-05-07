@@ -1,0 +1,17 @@
+{
+    "name": "ConsoleProRemote",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [
+        "WSA",
+        "WebGL",
+        "XboxOne"
+    ],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

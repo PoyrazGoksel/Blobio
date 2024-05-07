@@ -288,10 +288,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   version: 1
   data:
-    dataString: UEsDBBQAAAgIAAAQIezjV10fhQIAAHgFAAALACQAZ3JhcGgwLmpzb24KACAAAAAAAAEAGAAAgD7V3rGdAQCAPtXesZ0BAIA+1d6xnQGFVNtu2zAM/ZVAz+tgd+42721z0nQD2gbNhj7MfWBsOhYiS4YuTdIi/z5KdmI3GzAggJzDQ/LwIr0yLk2LhVV6rnl5q0pkXybMf7N3k8F4gztYK7nkL3jkPPLS1p4EgfMAlivCY+9mVINW8+KrXAtPjgh0kldKN7NyjZky1hBcgTBIJq2s95YEvU7YrnfY9+eLPycH+ipQWtT/YzlZCGhaLL3agZymPTtNA01SHT3Day6UENz0Ipjdt6HIDFrjqAQilByoqJDe82vk69rSn8ux831VGbS9JA37KdfUmy4q+6a6hjVgNp2uZxAOT8K7kLd/WS/iYK60am6OWePIZ7A1LzYPsC/A2FE/x/D0rWwntyA2sBL4WKO8U3OtnCzJaLXzrs7g5XQU6lRZVmOxGXid1jPQtX/PJh5mcwi17zLBm5VH3icdsBQqdDv1PqhpLt9JcNgI00ci1Iv4ZfAnrMer0xuuuTaWTH1C6dWtlNOeymahZ74YZzOlJQa419yiBGH3Cwpjzwd4ZhulPbNcg78kffLedtz9M5cAD/woOjMt1HYYlsEfrmkXiku7RNBFPYpnarW9RVPfOyu4xKEib7ijJmZKym75zD/clk5XUIwFWtxZp3EKFsIdIFG0JuXYlzoaXKQTwm9kKMNH/01l+N+T73INlFgEmN0pGW7Pm/PJb8La8fLtnrPVZZTEV5/iJIGqgCS6iD5cpUmcllEM8cf4c8LCReCSmg5i0XWtnxWtkBx6IGnpjw/ZZK6hDRev1LCd85dGjebPZaWWhUaU912EU7GoKQk9EOWs5FTmEq3lMiwfe82ZUMUGy/wUKA+dne2shnyIkrOWPyvrkZxl4fnK2YEd/gBQSwMEFAAACAgAABAh7PRrVpttAAAAeAAAAAkAJABtZXRhLmpzb24KACAAAAAAAAEAGAAAgD7V3rGdAQCAPtXesZ0BAIA+1d6xnQGrVipLLSrOzM9TslIw0TPSMzTVUVBKL0osyCgGihiCOKWZKSB2tFKSkYGJoam5oYlJYlpyoomBroGxqaWJoWWKgWGioZmhhYlSLFB9SWVBql9ibipET0BiSUZaZl5KZl66nntRZoo7yGil2FoAUEsBAi0AFAAACAgAABAh7ONXXR+FAgAAeAUAAAsAJAAAAAAAAAAAAAAAAAAAAGdyYXBoMC5qc29uCgAgAAAAAAABABgAAIA+1d6xnQEAgD7V3rGdAQCAPtXesZ0BUEsBAi0AFAAACAgAABAh7PRrVpttAAAAeAAAAAkAJAAAAAAAAAAAAAAA0gIAAG1ldGEuanNvbgoAIAAAAAAAAQAYAACAPtXesZ0BAIA+1d6xnQEAgD7V3rGdAVBLBQYAAAAAAgACALgAAACKAwAAAAA=
-    upgradeData: 
+    dataString: UEsDBBQAAAgIAAAQIewFSJGQmwIAALEFAAALACQAZ3JhcGgwLmpzb24KACAAAAAAAAEAGAAAgD7V3rGdAQCAPtXesZ0BAIA+1d6xnQGFVG1v2jAQ/ivIn9cp6eg29m0DSjepLSqd+mHphyO+EAvHjvxSoBX/fWcnkEAnTUJyeO65u+de7DcmlK0xd9rMjOC3miP7NmDhm30YdMYb3MJKq4V4xQPnSXBXBhJEzgM4oQlPg5vVFToj8u9qJQM5IdArUWhTTfkKx9o6S3AB0iKZjHbBWxH0NmDb1mHXnq/hHOzpK0fl0PyP5VUuoaqRB7UdeTRq2aNRpCmqo2UEzbmWUthWBHO7OhY5htp6KoEIXAAVFdMHfoliVTr6c9l3vi8Ki66VZGA3EYZ600RlP3TTsArsutH1AtLjUXgT8vad9SKN5sLo6uaQNU1CBleKfP0Auxys6/WzD09OZXu1AbmGpcSnEtWdnhntFSejMz64eouXk16oY2XjEvN1x2u0noG+fj+btJvNPta+HUtRLQPycdgAC6ljt0fBBw3N5ScJjhth20iEBhG/LT7Cqr86reFaGOvI1CZUQd1SexOobBp7ForxbqyNwgi3mmtUIN1uTmHc+QDPbL20Z5ZrCJekTd7aDrt/5hLhjp8kZ6a53nTDsvjLV/VcC+UWCCYve/FsqTe3aMt776RQeGa5oy6OtVLN9tl/+C28KSDv+zncOm9wAg7iJSBVtCe870stjS7KSxlWMtYRov+hOsLvObS5BEosI8zutIrX5+R8Dquw8oKfLjpbXibD9OpLOhxCkcMwuUg+XY2G6YgnKaSf069DFm+CUNR1kPOmbe2waIdUN1ZFW394yQYzA3W8edzAZiZeK91bAKEKvcgNorpvIhyLRUNJ6IXgUy6ozAU6J1TcPvaWManzNfLsGCiLnZ1unYGsi5KxWrxoF5CMjeP7lbEAHy/W3OCLwE1IfhIMJc0O+aOQWEEdTMme7f8CUEsDBBQAAAgIAAAQIeyAkuf+bQAAAHgAAAAJACQAbWV0YS5qc29uCgAgAAAAAAABABgAAIA+1d6xnQEAgD7V3rGdAQCAPtXesZ0Bq1YqSy0qzszPU7JSMNEz0jO01FFQSi9KLMgoBooYgjilmSkgdrRSkpGBiaGpuaGJSWJacqKJga6BsamliaFlioFhoqGZoYWJUixQfUllQapfYm4qRE9AYklGWmZeSmZeup57UWaKO8hopdhaAFBLAQItABQAAAgIAAAQIewFSJGQmwIAALEFAAALACQAAAAAAAAAAAAAAAAAAABncmFwaDAuanNvbgoAIAAAAAAAAQAYAACAPtXesZ0BAIA+1d6xnQEAgD7V3rGdAVBLAQItABQAAAgIAAAQIeyAkuf+bQAAAHgAAAAJACQAAAAAAAAAAAAAAOgCAABtZXRhLmpzb24KACAAAAAAAAEAGAAAgD7V3rGdAQCAPtXesZ0BAIA+1d6xnQFQSwUGAAAAAAIAAgC4AAAAoAMAAAAA
     file_cachedStartup: {fileID: 0}
-    data_cachedStartup: 
     cacheStartup: 0
   showNavGraphs: 1
   showUnwalkableNodes: 1
@@ -301,7 +299,7 @@ MonoBehaviour:
   manualDebugFloorRoof: 0
   showSearchTree: 0
   unwalkableNodeDebugSize: 0.3
-  logPathResults: 1
+  logPathResults: 0
   maxNearestNodeDistance: 100
   scanOnStartup: 1
   fullGetNearestSearch: 0
@@ -314,8 +312,7 @@ MonoBehaviour:
     _ConnectionLowLerp: {r: 0, g: 1, b: 0, a: 0.5}
     _ConnectionHighLerp: {r: 1, g: 0, b: 0, a: 0.5}
     _MeshEdgeColor: {r: 0, g: 0, b: 0, a: 0.5}
-    _AreaColors:
-    - {r: 0, g: 0, b: 0, a: 0}
+    _AreaColors: []
   tagNames: []
   heuristic: 2
   heuristicScale: 1
@@ -323,6 +320,8 @@ MonoBehaviour:
   maxFrameTime: 10
   batchGraphUpdates: 0
   graphUpdateBatchingInterval: 0.2
+  navmeshUpdates:
+    updateInterval: 0
   euclideanEmbedding:
     mode: 0
     seed: 0
@@ -478,7 +477,7 @@ MonoBehaviour:
   m_BlockingObjects: 0
   m_BlockingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 55
 --- !u!114 &878684597
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -10,7 +10,7 @@ namespace Pathfinding {
 	///
 	/// It is not meant to be pretty, but it does the job.
 	/// </summary>
-	[HelpURL("http://arongranberg.com/astar/docs/class_pathfinding_1_1_target_mover.php")]
+	[HelpURL("https://arongranberg.com/astar/documentation/stable/class_pathfinding_1_1_target_mover.php")]
 	public class TargetMover : MonoBehaviour {
 		/// <summary>Mask for the raycast placement</summary>
 		public LayerMask mask;
@@ -57,7 +57,7 @@ namespace Pathfinding {
 			} else {
 				// Fire a ray through the scene at the mouse position and place the target where it hits
 				RaycastHit hit;
-				if (Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition), out hit, Mathf.Infinity, mask)) {
+				if (cam.pixelRect.Contains(Input.mousePosition) && Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition), out hit, Mathf.Infinity, mask)) {
 					newPosition = hit.point;
 					positionFound = true;
 				}

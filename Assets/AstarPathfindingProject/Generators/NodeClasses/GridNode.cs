@@ -22,6 +22,12 @@ namespace Pathfinding {
 			_gridGraphs[graphIndex] = graph;
 		}
 
+		public static void ClearGridGraph (int graphIndex, GridGraph graph) {
+			if (graphIndex < _gridGraphs.Length && _gridGraphs[graphIndex] == graph) {
+				_gridGraphs[graphIndex] = null;
+			}
+		}
+
 		/// <summary>Internal use only</summary>
 		internal ushort InternalGridFlags {
 			get { return gridFlags; }
@@ -31,6 +37,7 @@ namespace Pathfinding {
 		const int GridFlagsConnectionOffset = 0;
 		const int GridFlagsConnectionBit0 = 1 << GridFlagsConnectionOffset;
 		const int GridFlagsConnectionMask = 0xFF << GridFlagsConnectionOffset;
+		const int GridFlagsAxisAlignedConnectionMask = 0xF << GridFlagsConnectionOffset;
 
 		const int GridFlagsEdgeNodeOffset = 10;
 		const int GridFlagsEdgeNodeMask = 1 << GridFlagsEdgeNodeOffset;
@@ -38,6 +45,12 @@ namespace Pathfinding {
 		public override bool HasConnectionsToAllEightNeighbours {
 			get {
 				return (InternalGridFlags & GridFlagsConnectionMask) == GridFlagsConnectionMask;
+			}
+		}
+
+		public override bool HasConnectionsToAllAxisAlignedNeighbours {
+			get {
+				return (InternalGridFlags & GridFlagsAxisAlignedConnectionMask) == GridFlagsAxisAlignedConnectionMask;
 			}
 		}
 
@@ -61,7 +74,7 @@ namespace Pathfinding {
 		///
 		/// See: SetConnectionInternal
 		/// </summary>
-		public bool HasConnectionInDirection (int dir) {
+		public override bool HasConnectionInDirection (int dir) {
 			return (gridFlags >> dir & GridFlagsConnectionBit0) != 0;
 		}
 
@@ -136,7 +149,7 @@ namespace Pathfinding {
 					var other = GetNeighbourAlongDirection(i) as GridNode;
 					if (other != null) {
 						// Remove reverse connection. See doc for GridGraph.neighbourOffsets to see which indices are used for what.
-						other.SetConnectionInternal(i < 4 ? ((i + 2) % 4) : (((i-2) % 4) + 4), false);
+						other.SetConnectionInternal(OppositeConnectionDirection(i), false);
 					}
 				}
 			}
@@ -152,11 +165,11 @@ namespace Pathfinding {
 			GridGraph gg = GetGridGraph(GraphIndex);
 
 			int[] neighbourOffsets = gg.neighbourOffsets;
-			GridNode[] nodes = gg.nodes;
+			var nodes = gg.nodes;
 
 			for (int i = 0; i < 8; i++) {
 				if (HasConnectionInDirection(i)) {
-					GridNode other = nodes[NodeInGridIndex + neighbourOffsets[i]];
+					var other = nodes[NodeInGridIndex + neighbourOffsets[i]];
 					if (other != null) action(other);
 				}
 			}
@@ -166,7 +179,7 @@ namespace Pathfinding {
 #endif
 		}
 
-		public Vector3 ClosestPointOnNode (Vector3 p) {
+		public override Vector3 ClosestPointOnNode (Vector3 p) {
 			var gg = GetGridGraph(GraphIndex);
 
 			// Convert to graph space
@@ -190,7 +203,7 @@ namespace Pathfinding {
 
 			GridGraph gg = GetGridGraph(GraphIndex);
 			int[] neighbourOffsets = gg.neighbourOffsets;
-			GridNode[] nodes = gg.nodes;
+			var nodes = gg.nodes;
 
 			for (int i = 0; i < 4; i++) {
 				if (HasConnectionInDirection(i) && other == nodes[NodeInGridIndex + neighbourOffsets[i]]) {
@@ -209,14 +222,14 @@ namespace Pathfinding {
 					bool rClear = false;
 					bool lClear = false;
 					if (HasConnectionInDirection(i-4)) {
-						GridNode n2 = nodes[NodeInGridIndex + neighbourOffsets[i-4]];
+						var n2 = nodes[NodeInGridIndex + neighbourOffsets[i-4]];
 						if (n2.Walkable && n2.HasConnectionInDirection((i-4+1)%4)) {
 							rClear = true;
 						}
 					}
 
 					if (HasConnectionInDirection((i-4+1)%4)) {
-						GridNode n2 = nodes[NodeInGridIndex + neighbourOffsets[(i-4+1)%4]];
+						var n2 = nodes[NodeInGridIndex + neighbourOffsets[(i-4+1)%4]];
 						if (n2.Walkable && n2.HasConnectionInDirection(i-4)) {
 							lClear = true;
 						}
@@ -239,7 +252,7 @@ namespace Pathfinding {
 			GridGraph gg = GetGridGraph(GraphIndex);
 
 			int[] neighbourOffsets = gg.neighbourOffsets;
-			GridNode[] nodes = gg.nodes;
+			var nodes = gg.nodes;
 
 			pathNode.UpdateG(path);
 			handler.heap.Add(pathNode);
@@ -248,7 +261,7 @@ namespace Pathfinding {
 			var index = NodeInGridIndex;
 			for (int i = 0; i < 8; i++) {
 				if (HasConnectionInDirection(i)) {
-					GridNode other = nodes[index + neighbourOffsets[i]];
+					var other = nodes[index + neighbourOffsets[i]];
 					PathNode otherPN = handler.GetPathNode(other);
 					if (otherPN.parent == pathNode && otherPN.pathID == pid) other.UpdateRecursiveG(path, otherPN, handler);
 				}
@@ -334,7 +347,7 @@ namespace Pathfinding {
 		const int JPSNaturalDiagonalNeighbours = (1 << 5) | (1 << 4) | (1 << 3);
 
 		/// <summary>Memoization of what results to return from the Jump method.</summary>
-		GridNode[] JPSCache;
+		GridNodeBase[] JPSCache;
 
 		/// <summary>
 		/// Each byte is a bitfield where each bit indicates if direction number i should return null from the Jump method.
@@ -348,13 +361,13 @@ namespace Pathfinding {
 		/// Executes a straight jump search.
 		/// See: http://en.wikipedia.org/wiki/Jump_point_search
 		/// </summary>
-		static GridNode JPSJumpStraight (GridNode node, Path path, PathHandler handler, int parentDir, int depth = 0) {
+		static GridNodeBase JPSJumpStraight (GridNode node, Path path, PathHandler handler, int parentDir, int depth = 0) {
 			GridGraph gg = GetGridGraph(node.GraphIndex);
 
 			int[] neighbourOffsets = gg.neighbourOffsets;
-			GridNode[] nodes = gg.nodes;
+			var nodes = gg.nodes;
 
-			GridNode origin = node;
+			var origin = node;
 			// Indexing into the cache arrays from multiple threads like this should cause
 			// a lot of false sharing and cache trashing, but after profiling it seems
 			// that this is not a major concern
@@ -363,7 +376,7 @@ namespace Pathfinding {
 
 			int cyclicParentDir = JPSCyclic[parentDir];
 
-			GridNode result = null;
+			GridNodeBase result = null;
 
 			// Rotate 180 degrees
 			const int forwardDir = 4;
@@ -401,7 +414,7 @@ namespace Pathfinding {
 				// Cache earlier results, major optimization
 				// It is important to read from it once and then return the same result,
 				// if we read from it twice, we might get different results due to other threads clearing the array sometimes
-				GridNode cachedResult = node.JPSCache[parentDir + threadOffset];
+				var cachedResult = node.JPSCache[parentDir + threadOffset];
 				if (cachedResult != null) {
 					result = cachedResult;
 					break;
@@ -452,7 +465,7 @@ namespace Pathfinding {
 
 				// Make sure we can reach the next node
 				if ((cyclic & (1 << forwardDir)) != 0) {
-					node = nodes[node.nodeInGridIndex + forwardOffset];
+					node = nodes[node.nodeInGridIndex + forwardOffset] as GridNode;
 
 					//Debug.DrawLine ( (Vector3)position + Vector3.up*0.2f*(depth), (Vector3)other.position + Vector3.up*0.2f*(depth+1), Color.magenta);
 				} else {
@@ -464,12 +477,12 @@ namespace Pathfinding {
 			if (result == null) {
 				while (origin != node) {
 					origin.JPSDead[threadID] |= (byte)(1 << parentDir);
-					origin = nodes[origin.nodeInGridIndex + forwardOffset];
+					origin = nodes[origin.nodeInGridIndex + forwardOffset] as GridNode;
 				}
 			} else {
 				while (origin != node) {
 					origin.JPSCache[parentDir + threadOffset] = result;
-					origin = nodes[origin.nodeInGridIndex + forwardOffset];
+					origin = nodes[origin.nodeInGridIndex + forwardOffset] as GridNode;
 				}
 			}
 
@@ -480,7 +493,7 @@ namespace Pathfinding {
 		/// Executes a diagonal jump search.
 		/// See: http://en.wikipedia.org/wiki/Jump_point_search
 		/// </summary>
-		GridNode JPSJumpDiagonal (Path path, PathHandler handler, int parentDir, int depth = 0) {
+		GridNodeBase JPSJumpDiagonal (Path path, PathHandler handler, int parentDir, int depth = 0) {
 			// Indexing into the cache arrays from multiple threads like this should cause
 			// a lot of false sharing and cache trashing, but after profiling it seems
 			// that this is not a major concern
@@ -509,7 +522,7 @@ namespace Pathfinding {
 			// Cache earlier results, major optimization
 			// It is important to read from it once and then return the same result,
 			// if we read from it twice, we might get different results due to other threads clearing the array sometimes
-			GridNode cachedResult = JPSCache[parentDir + threadOffset];
+			var cachedResult = JPSCache[parentDir + threadOffset];
 			if (cachedResult != null) {
 				//return cachedResult;
 			}
@@ -567,21 +580,21 @@ namespace Pathfinding {
 
 			GridGraph gg = GetGridGraph(GraphIndex);
 			int[] neighbourOffsets = gg.neighbourOffsets;
-			GridNode[] nodes = gg.nodes;
+			var nodes = gg.nodes;
 
 			{
 				// Rotate 180 degrees - 1 node
 				forwardDir = 3;
 				if (((cyclic >> forwardDir)&1) != 0) {
 					int oi = JPSInverseCyclic[(forwardDir + cyclicParentDir) % 8];
-					GridNode other = nodes[nodeInGridIndex + neighbourOffsets[oi]];
+					var other = nodes[nodeInGridIndex + neighbourOffsets[oi]];
 
 					//Debug.DrawLine ( (Vector3)position + Vector3.up*0.2f*(depth), (Vector3)other.position + Vector3.up*0.2f*(depth+1), Color.black);
-					GridNode v;
+					GridNodeBase v;
 					if (oi < 4) {
-						v = JPSJumpStraight(other, path, handler, JPSInverseCyclic[(cyclicParentDir-1+8)%8], depth+1);
+						v = JPSJumpStraight(other as GridNode, path, handler, JPSInverseCyclic[(cyclicParentDir-1+8)%8], depth+1);
 					} else {
-						v = other.JPSJumpDiagonal(path, handler, JPSInverseCyclic[(cyclicParentDir-1+8)%8], depth+1);
+						v = (other as GridNode).JPSJumpDiagonal(path, handler, JPSInverseCyclic[(cyclicParentDir-1+8)%8], depth+1);
 					}
 					if (v != null) {
 						JPSCache[parentDir+threadOffset] = this;
@@ -593,14 +606,14 @@ namespace Pathfinding {
 				forwardDir = 5;
 				if (((cyclic >> forwardDir)&1) != 0) {
 					int oi = JPSInverseCyclic[(forwardDir + cyclicParentDir) % 8];
-					GridNode other = nodes[nodeInGridIndex + neighbourOffsets[oi]];
+					var other = nodes[nodeInGridIndex + neighbourOffsets[oi]];
 
 					//Debug.DrawLine ( (Vector3)position + Vector3.up*0.2f*(depth), (Vector3)other.position + Vector3.up*0.2f*(depth+1), Color.grey);
-					GridNode v;
+					GridNodeBase v;
 					if (oi < 4) {
-						v = JPSJumpStraight(other, path, handler, JPSInverseCyclic[(cyclicParentDir+1+8)%8], depth+1);
+						v = JPSJumpStraight(other as GridNode, path, handler, JPSInverseCyclic[(cyclicParentDir+1+8)%8], depth+1);
 					} else {
-						v = other.JPSJumpDiagonal(path, handler, JPSInverseCyclic[(cyclicParentDir+1+8)%8], depth+1);
+						v = (other as GridNode).JPSJumpDiagonal(path, handler, JPSInverseCyclic[(cyclicParentDir+1+8)%8], depth+1);
 					}
 
 					if (v != null) {
@@ -614,7 +627,7 @@ namespace Pathfinding {
 			forwardDir = 4;
 			if (((cyclic >> forwardDir)&1) != 0) {
 				int oi = JPSInverseCyclic[(forwardDir + cyclicParentDir) % 8];
-				GridNode other = nodes[nodeInGridIndex + neighbourOffsets[oi]];
+				var other = nodes[nodeInGridIndex + neighbourOffsets[oi]] as GridNode;
 
 				//Debug.DrawLine ( (Vector3)position + Vector3.up*0.2f*(depth), (Vector3)other.position + Vector3.up*0.2f*(depth+1), Color.magenta);
 
@@ -636,7 +649,7 @@ namespace Pathfinding {
 			GridGraph gg = GetGridGraph(GraphIndex);
 
 			int[] neighbourOffsets = gg.neighbourOffsets;
-			GridNode[] nodes = gg.nodes;
+			var nodes = gg.nodes;
 			ushort pid = handler.PathID;
 
 			int noncyclic = gridFlags & 0xFF;
@@ -710,7 +723,7 @@ namespace Pathfinding {
 			for (int i = 0; i < 8; i++) {
 				if (((nb >> i)&1) != 0) {
 					int oi = JPSInverseCyclic[(i + cyclicParentDir) % 8];
-					GridNode other = nodes[nodeInGridIndex + neighbourOffsets[oi]];
+					var other = nodes[nodeInGridIndex + neighbourOffsets[oi]];
 
 #if ASTARDEBUG
 					if (((forced >> i)&1) != 0) {
@@ -722,9 +735,9 @@ namespace Pathfinding {
 #endif
 
 					if (oi < 4) {
-						other = JPSJumpStraight(other, path, handler, JPSInverseCyclic[(i + 4 + cyclicParentDir) % 8]);
+						other = JPSJumpStraight(other as GridNode, path, handler, JPSInverseCyclic[(i + 4 + cyclicParentDir) % 8]);
 					} else {
-						other = other.JPSJumpDiagonal(path, handler, JPSInverseCyclic[(i + 4 + cyclicParentDir) % 8]);
+						other = (other as GridNode).JPSJumpDiagonal(path, handler, JPSInverseCyclic[(i + 4 + cyclicParentDir) % 8]);
 					}
 
 					if (other != null) {
@@ -771,7 +784,7 @@ namespace Pathfinding {
 						//Debug.LogError ("ERR: " + (nodeInGridIndex + neighbourOffsets[oi]) + " " + cyclicParentDir + " " + parentDir + " Reverted " + oi);
 						//Debug.DrawRay ((Vector3)position, Vector3.up, Color.red);
 					} else {
-						GridNode other = nodes[nodeInGridIndex + neighbourOffsets[oi]];
+						var other = nodes[nodeInGridIndex + neighbourOffsets[oi]];
 						Debug.DrawLine((Vector3)position - Vector3.up*0.2f, Vector3.Lerp((Vector3)other.position, (Vector3)position, 0.6f) - Vector3.up*0.2f, Color.blue);
 					}
 				}
@@ -793,12 +806,12 @@ namespace Pathfinding {
 			{
 				int[] neighbourOffsets = gg.neighbourOffsets;
 				uint[] neighbourCosts = gg.neighbourCosts;
-				GridNode[] nodes = gg.nodes;
+				GridNodeBase[] nodes = gg.nodes;
 				var index = NodeInGridIndex;
 
 				for (int i = 0; i < 8; i++) {
 					if (HasConnectionInDirection(i)) {
-						GridNode other = nodes[index + neighbourOffsets[i]];
+						GridNodeBase other = nodes[index + neighbourOffsets[i]];
 						if (!path.CanTraverse(other)) continue;
 
 						PathNode otherPN = handler.GetPathNode(other);
@@ -854,6 +867,40 @@ namespace Pathfinding {
 			base.DeserializeNode(ctx);
 			position = ctx.DeserializeInt3();
 			gridFlags = ctx.reader.ReadUInt16();
+		}
+
+		public override void AddConnection (GraphNode node, uint cost) {
+			// In case the node was already added as an internal grid connection,
+			// we need to remove that connection before we insert it as a custom connection.
+			// Using a custom connection is necessary because it has a custom cost.
+			if (node is GridNode gn && gn.GraphIndex == GraphIndex) {
+				RemoveGridConnection(gn);
+			}
+			base.AddConnection(node, cost);
+		}
+
+		public override void RemoveConnection (GraphNode node) {
+			base.RemoveConnection(node);
+			// If the node is a grid node on the same graph, it might be added as an internal connection and not a custom one.
+			if (node is GridNode gn && gn.GraphIndex == GraphIndex) {
+				RemoveGridConnection(gn);
+			}
+		}
+
+		/// <summary>
+		/// Removes a connection from the internal grid connections.
+		/// See: SetConnectionInternal
+		/// </summary>
+		protected void RemoveGridConnection (GridNode node) {
+			var nodeIndex = NodeInGridIndex;
+			var gg = GetGridGraph(GraphIndex);
+
+			for (int i = 0; i < 8; i++) {
+				if (nodeIndex + gg.neighbourOffsets[i] == node.NodeInGridIndex && GetNeighbourAlongDirection(i) == node) {
+					SetConnectionInternal(i, false);
+					break;
+				}
+			}
 		}
 #else
 		public override void AddConnection (GraphNode node, uint cost) {

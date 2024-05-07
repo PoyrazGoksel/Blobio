@@ -48,7 +48,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: minebot_main/minebot_front_upperleg 1
+    path: minebot_main/minebot_front_upperleg2
   - curve:
       serializedVersion: 2
       m_Curve:
@@ -86,7 +86,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: minebot_main/minebot_front_upperleg 1/minebot_front_lowerleg
+    path: minebot_main/minebot_front_upperleg2/minebot_front_lowerleg
   - curve:
       serializedVersion: 2
       m_Curve:
@@ -531,7 +531,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalRotation.x
-    path: minebot_main/minebot_front_upperleg 1
+    path: minebot_main/minebot_front_upperleg2
     classID: 4
     script: {fileID: 0}
   - curve:
@@ -553,7 +553,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalRotation.y
-    path: minebot_main/minebot_front_upperleg 1
+    path: minebot_main/minebot_front_upperleg2
     classID: 4
     script: {fileID: 0}
   - curve:
@@ -575,7 +575,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalRotation.z
-    path: minebot_main/minebot_front_upperleg 1
+    path: minebot_main/minebot_front_upperleg2
     classID: 4
     script: {fileID: 0}
   - curve:
@@ -597,7 +597,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalRotation.w
-    path: minebot_main/minebot_front_upperleg 1
+    path: minebot_main/minebot_front_upperleg2
     classID: 4
     script: {fileID: 0}
   - curve:
@@ -707,7 +707,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalRotation.x
-    path: minebot_main/minebot_front_upperleg 1/minebot_front_lowerleg
+    path: minebot_main/minebot_front_upperleg2/minebot_front_lowerleg
     classID: 4
     script: {fileID: 0}
   - curve:
@@ -729,7 +729,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalRotation.y
-    path: minebot_main/minebot_front_upperleg 1/minebot_front_lowerleg
+    path: minebot_main/minebot_front_upperleg2/minebot_front_lowerleg
     classID: 4
     script: {fileID: 0}
   - curve:
@@ -751,7 +751,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalRotation.z
-    path: minebot_main/minebot_front_upperleg 1/minebot_front_lowerleg
+    path: minebot_main/minebot_front_upperleg2/minebot_front_lowerleg
     classID: 4
     script: {fileID: 0}
   - curve:
@@ -773,7 +773,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalRotation.w
-    path: minebot_main/minebot_front_upperleg 1/minebot_front_lowerleg
+    path: minebot_main/minebot_front_upperleg2/minebot_front_lowerleg
     classID: 4
     script: {fileID: 0}
   - curve:
@@ -1544,7 +1544,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: localEulerAngles.x
-    path: minebot_main/minebot_front_upperleg 1
+    path: minebot_main/minebot_front_upperleg2
     classID: 4
     script: {fileID: 0}
   - curve:
@@ -1566,7 +1566,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: localEulerAngles.y
-    path: minebot_main/minebot_front_upperleg 1
+    path: minebot_main/minebot_front_upperleg2
     classID: 4
     script: {fileID: 0}
   - curve:
@@ -1588,7 +1588,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: localEulerAngles.z
-    path: minebot_main/minebot_front_upperleg 1
+    path: minebot_main/minebot_front_upperleg2
     classID: 4
     script: {fileID: 0}
   - curve:
@@ -1676,7 +1676,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: localEulerAngles.x
-    path: minebot_main/minebot_front_upperleg 1/minebot_front_lowerleg
+    path: minebot_main/minebot_front_upperleg2/minebot_front_lowerleg
     classID: 4
     script: {fileID: 0}
   - curve:
@@ -1698,7 +1698,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: localEulerAngles.y
-    path: minebot_main/minebot_front_upperleg 1/minebot_front_lowerleg
+    path: minebot_main/minebot_front_upperleg2/minebot_front_lowerleg
     classID: 4
     script: {fileID: 0}
   - curve:
@@ -1720,7 +1720,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: localEulerAngles.z
-    path: minebot_main/minebot_front_upperleg 1/minebot_front_lowerleg
+    path: minebot_main/minebot_front_upperleg2/minebot_front_lowerleg
     classID: 4
     script: {fileID: 0}
   - curve:

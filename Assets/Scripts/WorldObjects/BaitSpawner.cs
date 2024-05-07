@@ -51,7 +51,7 @@ namespace WorldObjects
             eatenBait.Eaten -= OnBaitEaten;
 
             GameObject newParticleSystemGo = Instantiate
-            (_eatenParticleSystemPrefab, eatenBait.InitPos, Quaternion.identity);
+            (_eatenParticleSystemPrefab, eatenBait.TransformEncapsulated.position, Quaternion.identity);
             _baits.Remove(eatenBait);
 
             StartCoroutine(ParticleDelayedDestroy(newParticleSystemGo, 2f));

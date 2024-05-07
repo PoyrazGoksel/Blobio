@@ -99,6 +99,7 @@ namespace Pathfinding.Util {
 		}
 
 		/// <summary>Swaps the variables a and b</summary>
+		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		public static void Swap<T>(ref T a, ref T b) {
 			T tmp = a;
 

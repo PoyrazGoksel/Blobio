@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace Pathfinding {
-	[AddComponentMenu("Pathfinding/Modifiers/Advanced Smooth")]
-	[System.Serializable]
 	/// <summary>
-	/// \ingroup modifiers
 	/// Smoothing by dividing path into turns and straight segments.
+	///
+	/// Deprecated: This modifier is deprecated
 	/// </summary>
-	[HelpURL("http://arongranberg.com/astar/docs/class_pathfinding_1_1_advanced_smooth.php")]
+	[System.Serializable]
+	[System.Obsolete("This modifier is deprecated")]
+	[HelpURL("https://arongranberg.com/astar/documentation/stable/class_pathfinding_1_1_advanced_smooth.php")]
 	public class AdvancedSmooth : MonoModifier {
 		public override int Order { get { return 40; } }
 
@@ -211,7 +212,7 @@ namespace Pathfinding {
 				if (leftMagn < turningRadius)
 					noLeft = true;
 
-				double alfa = noRight  ? 0 : Atan2(prev-rightCircleCenter);
+				double alfa = noRight ? 0 : Atan2(prev-rightCircleCenter);
 				double delta = noRight ? 0 : (ThreeSixtyRadians * 0.25) - Math.Asin(turningRadius / (prev-rightCircleCenter).magnitude);
 
 				//Angle to the point where turning ends on the right circle
@@ -369,7 +370,7 @@ namespace Pathfinding {
 		public abstract class TurnConstructor {
 			/// <summary>
 			/// Constant bias to add to the path lengths.
-			/// This can be used to favor certain turn types before others.\n
+			/// This can be used to favor certain turn types before others.
 			/// By for example setting this to -5, paths from this path constructor will be chosen
 			/// if there are no other paths more than 5 world units shorter than this one (as opposed to just any shorter path)
 			/// </summary>
@@ -391,12 +392,12 @@ namespace Pathfinding {
 
 			public static bool changedPreviousTangent = false;
 
-			public abstract void Prepare (int i, Vector3[] vectorPath);
+			public abstract void Prepare(int i, Vector3[] vectorPath);
 			public virtual void  OnTangentUpdate () {}
 			public virtual void  PointToTangent (List<Turn> turnList) {}
 			public virtual void  TangentToPoint (List<Turn> turnList) {}
 			public virtual void TangentToTangent (List<Turn> turnList) {}
-			public abstract void GetPath (Turn turn, List<Vector3> output);
+			public abstract void GetPath(Turn turn, List<Vector3> output);
 			//abstract void Evaluate (Turn turn);
 
 			public static void Setup (int i, Vector3[] vectorPath) {

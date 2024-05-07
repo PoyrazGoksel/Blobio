@@ -2,9 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
-#if UNITY_5_5_OR_NEWER
 using UnityEngine.Profiling;
-#endif
 
 namespace Pathfinding {
 #if NETFX_CORE
@@ -128,7 +126,9 @@ namespace Pathfinding {
 
 			public GraphUpdateLock (PathProcessor pathProcessor, bool block) {
 				this.pathProcessor = pathProcessor;
+				Profiler.BeginSample("Pausing pathfinding");
 				id = pathProcessor.Lock(block);
+				Profiler.EndSample();
 			}
 
 			/// <summary>
@@ -249,7 +249,7 @@ namespace Pathfinding {
 		/// </summary>
 		public void InitializeNode (GraphNode node) {
 			if (!queue.AllReceiversBlocked) {
-				throw new System.Exception("Trying to initialize a node when it is not safe to initialize any nodes. Must be done during a graph update. See http://arongranberg.com/astar/docs/graph-updates.php#direct");
+				throw new System.Exception("Trying to initialize a node when it is not safe to initialize any nodes. Must be done during a graph update. See https://arongranberg.com/astar/docs/graphupdates.html#direct");
 			}
 
 			for (int i = 0; i < pathHandlers.Length; i++) {
@@ -309,7 +309,6 @@ namespace Pathfinding {
 				IPathInternals ipath = (IPathInternals)path;
 
 
-				AstarProfiler.StartFastProfile(0);
 				ipath.PrepareBase(pathHandler);
 
 				// Now processing the path
@@ -327,28 +326,23 @@ namespace Pathfinding {
 				// Prepare the path
 				ipath.Prepare();
 
-				AstarProfiler.EndFastProfile(0);
 
 				if (path.CompleteState == PathCompleteState.NotCalculated) {
 					// For visualization purposes, we set the last computed path to p, so we can view debug info on it in the editor (scene view).
 					astar.debugPathData = ipath.PathHandler;
 					astar.debugPathID = path.pathID;
 
-					AstarProfiler.StartFastProfile(1);
 
 					// Initialize the path, now ready to begin search
 					ipath.Initialize();
 
-					AstarProfiler.EndFastProfile(1);
 
 					// Loop while the path has not been fully calculated
 					while (path.CompleteState == PathCompleteState.NotCalculated) {
 						// Do some work on the path calculation.
 						// The function will return when it has taken too much time
 						// or when it has finished calculation
-						AstarProfiler.StartFastProfile(2);
 						ipath.CalculateStep(targetTick);
-						AstarProfiler.EndFastProfile(2);
 
 						targetTick = System.DateTime.UtcNow.Ticks + maxTicks;
 
@@ -371,7 +365,6 @@ namespace Pathfinding {
 				// Cleans up node tagging and other things
 				ipath.Cleanup();
 
-				AstarProfiler.StartFastProfile(9);
 
 				if (path.immediateCallback != null) path.immediateCallback(path);
 
@@ -386,7 +379,6 @@ namespace Pathfinding {
 				// Will advance to ReturnQueue
 				ipath.AdvanceState(PathState.ReturnQueue);
 
-				AstarProfiler.EndFastProfile(9);
 #if UNITY_2017_3_OR_NEWER
 				profilingSampler.End();
 #endif
@@ -435,7 +427,6 @@ namespace Pathfinding {
 				// The path we are currently calculating
 				Path p = null;
 
-				AstarProfiler.StartProfile("Path Queue");
 
 				// Try to get the next path to be calculated
 				bool blockedBefore = false;
@@ -448,15 +439,11 @@ namespace Pathfinding {
 					}
 
 					if (p == null) {
-						AstarProfiler.EndProfile();
 						yield return null;
-						AstarProfiler.StartProfile("Path Queue");
 					}
 				}
 
-				AstarProfiler.EndProfile();
 
-				AstarProfiler.StartProfile("Path Calc");
 
 				IPathInternals ip = (IPathInternals)p;
 
@@ -479,14 +466,9 @@ namespace Pathfinding {
 				long startTicks = System.DateTime.UtcNow.Ticks;
 				long totalTicks = 0;
 
-				AstarProfiler.StartFastProfile(8);
 
-				AstarProfiler.StartFastProfile(0);
 				//Prepare the path
-				AstarProfiler.StartProfile("Path Prepare");
 				ip.Prepare();
-				AstarProfiler.EndProfile("Path Prepare");
-				AstarProfiler.EndFastProfile(0);
 
 				// Check if the Prepare call caused the path to complete
 				// If this happens the path usually failed
@@ -496,37 +478,27 @@ namespace Pathfinding {
 					astar.debugPathID = p.pathID;
 
 					// Initialize the path, now ready to begin search
-					AstarProfiler.StartProfile("Path Initialize");
 					ip.Initialize();
-					AstarProfiler.EndProfile();
 
 					// The error can turn up in the Init function
 					while (p.CompleteState == PathCompleteState.NotCalculated) {
 						// Do some work on the path calculation.
 						// The function will return when it has taken too much time
 						// or when it has finished calculation
-						AstarProfiler.StartFastProfile(2);
 
-						AstarProfiler.StartProfile("Path Calc Step");
 						ip.CalculateStep(targetTick);
-						AstarProfiler.EndFastProfile(2);
 
-						AstarProfiler.EndProfile();
 
 						// If the path has finished calculation, we can break here directly instead of sleeping
 						// Improves latency
 						if (p.CompleteState != PathCompleteState.NotCalculated) break;
 
-						AstarProfiler.EndFastProfile(8);
 						totalTicks += System.DateTime.UtcNow.Ticks-startTicks;
 						// Yield/sleep so other threads can work
 
-						AstarProfiler.EndProfile();
 						yield return null;
-						AstarProfiler.StartProfile("Path Calc");
 
 						startTicks = System.DateTime.UtcNow.Ticks;
-						AstarProfiler.StartFastProfile(8);
 
 						// Cancel function (and thus the thread) if no more paths should be accepted.
 						// This is done when the A* object is about to be destroyed
@@ -549,20 +521,17 @@ namespace Pathfinding {
 				// Cleans up node tagging and other things
 				ip.Cleanup();
 
-				AstarProfiler.EndFastProfile(8);
 
 				// Call the immediate callback
 				// It needs to be stored in a local variable to avoid race conditions
 				var tmpImmediateCallback = p.immediateCallback;
 				if (tmpImmediateCallback != null) tmpImmediateCallback(p);
 
-				AstarProfiler.StartFastProfile(13);
 
 				// It needs to be stored in a local variable to avoid race conditions
 				var tmpOnPathPostSearch = OnPathPostSearch;
 				if (tmpOnPathPostSearch != null) tmpOnPathPostSearch(p);
 
-				AstarProfiler.EndFastProfile(13);
 
 				// Push the path onto the return stack
 				// It will be detected by the main Unity thread and returned as fast as possible (the next late update)
@@ -570,7 +539,6 @@ namespace Pathfinding {
 
 				ip.AdvanceState(PathState.ReturnQueue);
 
-				AstarProfiler.EndProfile();
 
 				// Wait a bit if we have calculated a lot of paths
 				if (System.DateTime.UtcNow.Ticks > targetTick) {

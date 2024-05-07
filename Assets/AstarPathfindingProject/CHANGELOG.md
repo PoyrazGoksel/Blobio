@@ -1,3 +1,189 @@
+## 4.2.19 (2023-11-14)
+- This release contains fixes and features that have been backported from the 4.3 beta.
+		The beta version contains a lot more exciting new features and fixes.
+		You can download the 4.3 beta at https://www.arongranberg.com/astar/download.
+- The documentation now has a dropdown to allow you to choose between different versions of the package, and a notification if you are viewing a previous version.
+	 	\shadowimage{changelog/documentation_version_dropdown.png}
+- Added a new tutorial: \ref traversal_provider.
+- You can now set a custom traversal provider on the Seeker component, and it will be applied to all path requests. See \reflink{Seeker.traversalProvider}.
+- Changed \link Pathfinding.Seeker.IsDone Seeker.IsDone\endlink to return true from within the OnPathComplete callback.
+		Previously it would always return false, which was confusing since the callback explicitly indicates that the path has been calculated.
+- Made the grid graph's collision visualization in the inspector green instead of blue.
+		This is done to make the connection to colliders more clear. The color is also easier to see against the grey background.
+- The \reflink{RaycastModifier} now defaults to graph raycasting in the pro version of the package.
+- The transform tool for the GameObject with the AstarPath component is now hidden to reduce clutter, as each graph has its own transform tool instead.
+- \reflink{AutoRepathPolicy} will now automatically randomly spread out path recalculations a bit to avoid many agents recalculating their paths at the same time.
+- Added \reflink{GraphMask.FromGraphIndex}.
+- Added an option for a custom edge filter in \reflink{GraphUtilities.GetContours}.
+- Added \reflink{GridGraph.GetNeighbourDirections}.
+- Added \reflink{NavGraph.isScanned}.
+- Added \reflink{NavGraph.IsInsideBounds}.
+- Added \reflink{GraphNode.ContainsPoint} and \reflink{GraphNode.ContainsPointInGraphSpace}.
+- Added \reflink{GridGraph.AlignToTilemap}.
+- Added \reflink{IAstarAI.endOfPath}.
+- Added \reflink{GridNodeBase.HasConnectionsToAllAxisAlignedNeighbours}.
+- Added \reflink{GraphUpdateScene.GetGraphUpdate}.
+- Added \reflink{ABPath.cost} for accessing the total cost of a calculated path.
+- Added a way to align a grid graph to a tilemap. Previously this has been quite tricky, especially for isometric and hexagonal tilemap layouts.
+		\shadowimage{gridgraph/align_to_tilemap.png}
+- Added ASTAR_LARGER_GRIDS which can be set under the Optimizations tab to enable grid graphs larger than 1024x1024.
+- Changed how \reflink{GridGraph.aspectRatio} works for isometric and hexagonal grid graphs. Now it works more intuitively to just make the nodes N times wider.
+		Before it only behaved properly for rectangular grid graphs.
+- Deprecated NNConstraint.Default. Use the equivalent \reflink{NNConstraint.Walkable} property instead, as this name is more descriptive.
+- Deprecated \reflink{AIPath.OnTargetReached}, \reflink{RichAI.OnTargetReached}, \reflink{AILerp.OnTargetReached}.
+		You can use \reflink{IAstarAI.reachedDestination} or \reflink{IAstarAI.reachedEndOfPath} instead.
+		The OnTargetReached method will continue to work as before, but using it is discouraged.
+- Deprecated the AdvancedSmooth modifier. It never worked particularly well, and given that no one has asked a single support question about it the last 5 years or so, I don't think a lot of people use it.
+- Fixed \link Pathfinding.IAstarAI.SetPath ai.SetPath\endlink did not accept paths if you called it from the OnPathComplete callback for the path.
+- Fixed the first tag color in the inspector would sometimes be initialized to completely transparent.
+- Fixed \reflink{NavmeshCut}s with custom meshes could calculate an incorrect bounding box, which could lead to it not updating some tiles, even if it was touching them.
+- Fixed \reflink{GraphUpdateScene.GetBounds} sometimes incorrectly returning an empty bounding box if the \a convex option was enabled.
+- Fixed some cases where a recast graph would miss some connections between nodes in different tiles. Especially if the shared edge was long.
+- Fixed Navmesh Cutting Update Interval would not be serialized, and therefore always reset to 0 when the game started.
+- Fixed the grid graph's collision preview showing the side view when using 2D physics even though that's irrelevant for 2D.
+- Fixed an exception could in rare circumstances be thrown when using \reflink{ABPath.calculatePartial}.
+- Fixed editor-only data would sometimes not be loaded from graphs, leading to some settings in the graph inspectors to be lost (e.g. if the grid graph's collision preview was open or closed).
+- Fixed \reflink{TriangleMeshNode.ContainsConnection} could throw an exception if the node had no connections at all.
+- Fixed calling \reflink{GraphUtilities.GetContours} with a grid graph that had one-way connections could cause an infinite loop.
+		Now an exception will be thrown if any one-way connections are found. This is reasonable because the contours of a grid graph are not really well-defined if any one-way connections exist.
+- Removed previously deprecated methods on the Path class: GetState, Log, LogError and ReleaseSilent. They have all been deprecated for over 5 years.
+- Removed previously deprecated methods on the AstarData class: GetGraphType(string), CreateGraph(string), AddGraph(string, and GetRaycastableGraphs. They have all been deprecated for over 5 years.
+
+## 4.2.18 (2022-11-08)
+- This release contains fixes and features that have been backported from the 4.3 beta.
+		You can download the 4.3 beta at https://www.arongranberg.com/astar/download.
+- Added a documentation page on the architecture of the package: \ref architecture.
+- Added a tutorial on migrating from Unity's pathfinding to this package: \ref migrating-from-unity.
+- Added a tutorial on how to deal with pathfinding in large worlds: \ref large-worlds.
+- Nearest node queries on layered grid graphs are now significantly faster.
+- Improved performance of linecasts on grid graphs by approximately a factor of 2.
+- Improved accuracy of linecasts on grid graphs. In particular, many edge cases were previously undefined and were not consistently handled.
+	  Now linecasts which only touch corners of obstacles are always allowed, and also linecasts which go right on the border between walkable and unwalkable nodes.
+- Add \reflink{GridNodeBase.NormalizePoint} and \reflink{GridNodeBase.UnNormalizePoint}.
+- Various documentation improvements across the whole package.
+- The game view will now automatically repaint after a graph is scanned in the editor. Previously only the scene view was repainted.
+- Grid graphs and layered grid graphs now have support for \reflink{NNConstraint.distanceXZ}.
+		This makes \reflink{AIPath.constrainInsideGraph} work a lot better for grid graphs which have slopes.
+- Changed the color of gizmos drawn for the \reflink{NavmeshAdd} component from green to purple to avoid confusion with the \reflink{Seeker}s gizmos.
+- If you have a persistent (DontDestroyOnLoad) AstarPath component while loading a new scene with an existing AstarPath component, the newly loaded AstarPath component
+		will disable itself instead of logging an error and leaving both components in inconsistent states. This will make it easier to keep a single AstarPath component
+		around for the whole duration of the game.
+- A garbage collection will no longer be forced immediately after scanning graphs. Unity has decent support for incremental GC now, and it's best to rely on that instead.
+		This may improve performance when scanning graphs.
+- Renamed AutoRepathPolicy.interval/maximumInterval to \reflink{AutoRepathPolicy.period}/maximumPeriod since that's a more descriptive name.
+- Changed \reflink{AutoRepathPolicy} to make it usable for custom movement scripts without having to implement the \reflink{IAstarAI} interface.
+- Increased artificial limit for the maximum length of paths from 2048 to 16384.
+- \reflink{GridNodeBase.RemoveConnection} now also works for grid connection, not just custom connections.
+- \reflink{GridNodeBase.AddConnection} will now remove an existing grid connection (if it exists) to the same node, before adding the new custom connection.
+		Before, you could get two connections between the nodes instead of one, like you'd expect.
+- Using \reflink{IAstarAI.SetPath} will now set the destination of the movement script to the end point of the path by default.
+		If you pass a \reflink{RandomPath}, \reflink{FleePath} or \reflink{MultiTargetPath}, the destination will be set once the path has been calculated since that's when it is first known.
+		This makes properties like \reflink{IAstarAI.reachedDestination} and \reflink{IAstarAI.remainingDistance} work out of the box for those path types.
+- Created a property drawer for the \reflink{GraphMask} struct. So now you can include GraphMask fields in your own scripts and they will show up nicely in the inspector.
+- Improved error checking in \reflink{FloodPath} for if the start node was destroyed before the path calculation started.
+- Fixed saving or loading graphs could deadlock on WebGL since the zip library tired to use threads, which doesn't work on WebGL.
+- Fixed linecasts on grid graphs would not always return a hit if the start point or end point was outside the graph.
+- Fixed ExitGUIException could show up in the console sometimes when editing component properties.
+- Fixed floating point errors causing the \reflink{FunnelModifier} to simplify the path incorrectly in rare cases.
+- Fixed not being able to check for updates in Unity 2022.1+ because https must now be used for all web requests.
+- Fixed inheriting from scripts in this package (e.g. AIPath) and adding new fields, would not make those fields show up in the inspector unless you had a custom editor script too.
+		Now all fields the editor scripts cannot handle will show up automatically.
+- Deprecated \reflink{AstarPath.prioritizeGraphs}.
+- Deprecated some older linecast overloads for grid graphs.
+- Deprecated \reflink{LevelGridNode.GetConnection} in favor of \reflink{LevelGridNode.HasConnectionInDirection}.
+
+## 4.2.17 (2021-11-06)
+- Fixed RVO example scenes not working properly (regression introduced in 4.2.16).
+
+## 4.2.16 (2021-10-24)
+- This release contains fixes and features that have been backported from the 4.3 beta.
+		You can download the 4.3 beta at https://www.arongranberg.com/astar/download.
+- Breaking changes
+		- Changed when the AIPath movement script stops when \reflink{AIPath.whenCloseToDestination} is set to Stop.
+			See below for more details. The new behavior is usually what you want.
+			If you really want the old behavior then set \code ai.whenCloseToDestination = CloseToDestinationMode.ContinueToExactDestination\endcode
+			and in a separate script run \code ai.isStopped = ai.reachedEndOfPath\endcode every frame.
+		- The AIPath script will now clear the path it is following if a path calculation fails.
+			See below for more details.
+		- Changed the order of execution for the AstarPath script to -10000.
+			Previously the order of execution was left at the Unity default value which is very unpredictable.
+			This may cause issues for you if you relied on Awake to be executed before the graphs were loaded and scanned.
+			If you need full control over when the graphs are scanned it is recommended that you disable \reflink{scanOnStartup} and instead call \reflink{AstarPath.Scan} manually when you want to scan the graphs.
+- Improvements
+		- Added some helper visualizations for the collision settings for the grid graph.
+		\shadowimage{changelog/grid_graph_collision_visualization.png}
+		- Improved the way pages are grouped in the documentation to hopefully make it more intuitive.
+		- Added \link Pathfinding.GridGraph.SetGridShape GridGraph.SetGridShape\endlink.
+		- Added a new dynamic path recalculation mode to the movement scripts.
+			This mode is smarter about when it recalculates paths. It will recalculate the path often when the destination changes a lot
+			and much less frequently if the destination doesn't change much or if it is very far away.
+			This can help improve both the responsiveness of your agents and the performance if you have many agents that do frequent path recalculations.
+			Any existing agents will still use the old method of recalculating the path every N seconds, but you can change this in the inspector.
+			New agents will by default use the new Dynamic mode.
+		- Improved performance of the AIPath and RichAI inspectors a bit.
+		- Improved the accuracy and performance of the RaycastModifier when thick raycasting is enabled.
+		- The \link Pathfinding.ProceduralGridMover ProceduralGridMover\endlink script now has an option for specifying which graph to update.
+		- Added a filter parameter to graph linecast methods. This can be used to mark additional nodes as not being traversable by the linecast.
+			See \link Pathfinding.GridGraph.Linecast(Vector3,Vector3,GraphHitInfo,List<GraphNode>,System.Func<GraphNode,bool>) GridGraph.Linecast\endlink.
+		- The \link Pathfinding.RaycastModifier RaycastModifier\endlink now respects which tags are traversable and any ITraversalProvider set on the path.
+		- Added a setter for the rotation property of all movement scripts (\reflink{IAstarAI.rotation}).
+		- Exposed \reflink{AILerp.velocity}.
+		- Added a get/set property \reflink{GridGraph.is2D} which is equivalent to the inspector's "2D" toggle.
+		- Added \reflink{GraphUpdateObject.stage} which contains info about if a graph update has been applied or not.
+		- Improved the DynamicGridObstacle to handle cases when graph updates take a very long time in a better way.
+		- Improved the \reflink{NavmeshAdd} component inspector.
+		- Added a \reflink{NavmeshClipper.graphMask} field to the \reflink{NavmeshCut} and \reflink{NavmeshAdd} components.
+- Changes
+		- The AIPath/RichAI.canSearch field has been replaced by the \reflink{AIBase.autoRepath.mode} field.
+			For backwards compatibility setting canSearch to false will set the mode to Never and setting it to true will set the mode to EveryNSeconds.
+		- The AIPath/RichAI.repathRate field has been replaced by the \reflink{AIBase.autoRepath.interval} field.
+			For backwards compatibility you can both read and write to the old name and it will work as before.
+			Note that this field is not used for the new Dynamic path recalculation mode.
+		- The AIPath script will now clear the path it is following if a path calculation fails.
+			Previously it would continue following its previous path. This could lead to problems if the world had changed so that there was no longer a valid path to the target.
+			The agent could then in some situations just continue trying to walk through obstacles instead of stopping.
+			In pretty much all cases this change in behavior is what you want and will not cause any problems when upgrading.
+		- Changed when the AIPath movement script stops when \reflink{AIPath.whenCloseToDestination} is set to Stop.
+			Consider the case when the destination was slightly outside the navmesh and the path instead goes to the closest point it can reach.
+			Previously it would stop up to \reflink{AIPath.endReachedDistance} units from the end of the path.
+			This could lead to unexpected behavior since it may be the case that by just moving a bit closer to the end of the path it would
+			end up within \reflink{AIPath.endReachedDistance} units from the destination.
+			Essentially \reflink{AIPath.reachedDestination} would remain false even though the agent could actually reach the destination by just moving a bit further.
+			So this behavior has been changed so that it now only stops when it is within \reflink{AIPath.endReachedDistance} units from the destination, not the end of the path.
+		- Made GridGraph.GetRectFromBounds public.
+		- Right clicking fields in the inspector no longer shows the "Show in online documentation" context menu, instead the normal unity context menu is shown.
+			The previous menu prevented things like resetting individual fields to their prefab values and similar things.
+		- Changed some 'internal' access modifiers to 'public' or 'protected' on the Path class. This makes it easier to create custom path types.
+- Fixes
+		- Fixed a bug which could very rarely cause some node connections between tiles in a recast graph to be missed, causing various subtle movement issues.
+		- Fixed \reflink{AIPath.reachedEndOfPath} not always being reset to false when the component was disabled and then enabled again.
+		- \reflink{GraphNode.ClosestPointOnNode} is now available for all node types instead of only being implemented for \reflink{GridNode} and \reflink{MeshNode}.
+		- Fixed a case where the Seeker -> Start End Modifier -> Snapping to NodeConnection mode would not respect tags or \reflink{ITraversalProvider}s.
+			This could result in the path partially entering a node which should not be traversable by it.
+		- Fixed a case where using the \reflink{ABPath.calculatePartial} option together with Seeker->Start End Modifier->Snapping=ClosestOnNode would make the path seemingly ignore which tags were traversable in some cases.
+		- Fixed clicking Apply in the Optimizations tab could log error messages about some build platforms not existing.
+		- Fixed exception when using \reflink{MecanimBridge} with \reflink{RichAI}.
+		- Fixed \reflink{AIPath.reachedDestination} would throw an exception if you tried to access it when the agent had no path.
+		- Fixed calling `AstarData.ClearGraphs` and then immediately calling `AstarData.AddGraph` would result in an exception.
+		- Fixed \reflink{UpdateGraphsNoBlock(GraphUpdateObject,GraphNode,GraphNode,bool)} could return incorrect results if there were already some pending graph updates.
+		- Fixed grid graph would see 2D triggers as obstacles. Now all 2D colliders marked as triggers will be ignored by the grid graph.
+		- Fixed a memory leak that could happen after switching scenes. Thanks @nGenius for finding it.
+		- Fixed RichAI always teleporting to the closest point on the navmesh when the script is enabled even if \reflink{RichAI.canMove} is false.
+		- Fixed GraphUpdateScene not using the outline from an attached PolygonCollider2D properly.
+		- Fixed some cases where graph updates with 2D colliders would not use the most up to date physics engine data.
+			All graph updates are now preceeded by a call to Physics2D.SyncTransforms (in addition to Physics.SyncTransform which was already being called).
+		- The RaycastModifier now respects graphMasks set on paths. Thanks brettkercher for reporting the bug.
+		- Fixed linecasts on navmesh/recast graphs could fail when the start of the line was close to a steep slope.
+		- Fixed linecasts on navmesh/recast graphs would incorrectly return no obstructions if for example used between two floors of a building that were not connected.
+		- Fixed RichAI trying to traverse an off mesh link twice if the path's endpoint was also the endpoint of an off-mesh link.
+		- Fixed a missing script in the turnbased example scene causing warnings when opening that scene.
+		- Fixed warnings would be logged when first importing the package on recent version of Unity due to a change in how Unity imports fbx files.
+		- Make DynamicGridObstacle call Physics.SyncTransforms to ensure it has the most up to date data for the collider.
+		- Removed 'Upgrading serialized data ...' message as it was mostly just annoying.
+		- Fixed GameObject references (like the PointGraph's Root field) would not get serialized properly if the AstarPath component was stored in a prefab.
+		- Fixed some smaller memory memory leaks in the unity editor.
+		- Fixed a bug which could cause a SynchronizationLockException to be thrown in some cases when the game was quit in a non-graceful way (e.g. when Unity exits play mode after recompiling scripts).
+
 ## 4.2.15 (2020-03-30)
 - Added \link Pathfinding.IAstarAI.GetRemainingPath ai.GetRemainingPath\endlink.
 - Fixed importing the package using the unity package manager would cause the A* inspector to not be able to load since it couldn't find the editor resources folder.
@@ -460,7 +646,7 @@
 		- Fixed some cases where the funnel modifier would produce incorrect results.
 		- Fixed typo in a private method in the AstarPath class. Renamed the UpdateGraphsInteral method to UpdateGraphsInternal.
 		- Fixed AIPath.remainingDistance and AIPath.targetReached could be incorrect for 1 frame when a new path had just been calculated (introduced in a previous beta release).
-	
+
 ## 4.0.11 (2017-09-09)
 - Fixed paths would ignore the ITraversalProvider (used for the turn based utilities) on the first node of the path, resulting in successful paths where they should have failed.
 - Fixed BlockManager.BlockMode.AllExceptSelector could often produce incorrect results. Thanks Cquels for spotting the bug.

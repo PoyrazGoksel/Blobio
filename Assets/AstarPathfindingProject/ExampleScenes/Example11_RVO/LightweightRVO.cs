@@ -16,8 +16,9 @@ namespace Pathfinding.Examples {
 	/// This script will render the agents by generating a square for each agent combined into a single mesh with appropriate UV.
 	///
 	/// A few GUI buttons will be drawn by this script with which the user can change the number of agents.
+	/// [Open online documentation to see images]
 	/// </summary>
-	[HelpURL("http://arongranberg.com/astar/docs/class_pathfinding_1_1_examples_1_1_lightweight_r_v_o.php")]
+	[HelpURL("https://arongranberg.com/astar/documentation/stable/class_pathfinding_1_1_examples_1_1_lightweight_r_v_o.php")]
 	public class LightweightRVO : MonoBehaviour {
 		/// <summary>Number of agents created at start</summary>
 		public int agentCount = 100;

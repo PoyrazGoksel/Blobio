@@ -7,7 +7,7 @@ namespace Pathfinding.Examples {
 	/// </summary>
 	[RequireComponent(typeof(Seeker))]
 	[System.Obsolete("This script has been replaced by Pathfinding.Examples.MineBotAnimation. Any uses of this script in the Unity editor will be automatically replaced by one AIPath component and one MineBotAnimation component.")]
-	[HelpURL("http://arongranberg.com/astar/docs/class_pathfinding_1_1_examples_1_1_mine_bot_a_i.php")]
+	[HelpURL("https://arongranberg.com/astar/documentation/stable/class_pathfinding_1_1_examples_1_1_mine_bot_a_i.php")]
 	public class MineBotAI : AIPath {
 		/// <summary>
 		/// Animation component.
@@ -36,7 +36,11 @@ namespace Pathfinding.Examples {
 					var newComp = gameObject.AddComponent(newType);
 					foreach (var field in newComp.GetType().GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)) {
 						var oldField = this.GetType().GetField(field.Name);
-						if (oldField != null) field.SetValue(newComp, oldField.GetValue(this));
+						try {
+							if (oldField != null) field.SetValue(newComp, oldField.GetValue(this));
+						} catch (System.Exception e) {
+							Debug.LogError("Failed to upgrade some fields.\n" + e);
+						}
 					}
 					for (int i = components.Length - 1; i > index; i--) UnityEditorInternal.ComponentUtility.MoveComponentUp(newComp);
 				}

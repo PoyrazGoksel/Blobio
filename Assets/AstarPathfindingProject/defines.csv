@@ -13,3 +13,4 @@ ASTAR_SET_LEVELGRIDNODE_HEIGHT       ; Enables a field height for each node if y
 ProfileAstar                         ; Enables profiling of the pathfinding process.
 ASTAR_UNITY_PRO_PROFILER             ; Requires ProfileAstar, profiles section of astar code which will show up in the Unity Pro Profiler.
 ASTAR_JPS                            ; Enables jump point search support for grid graphs. There is a separate toggle in the grid graph settings. Disable this if you do not use it since it reduces memory usage.
+ASTAR_LARGER_GRIDS                   ; Enables grid graphs larger than 1024x1024. This is not recommended for most users since such large grid graphs use a lot of memory and can be quite slow.

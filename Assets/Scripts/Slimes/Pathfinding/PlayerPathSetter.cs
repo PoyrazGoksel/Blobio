@@ -17,7 +17,10 @@ namespace Slimes.Pathfinding
             _mySettings = ProjectInstaller.Instance.GameSettings.PlayerPathSetterSettings;
         }
 
-        private void Start() {StartCoroutine(InputListenerRoutine());}
+        private void Start()
+        {
+            StartCoroutine(InputListenerRoutine());
+        }
 
         private IEnumerator InputListenerRoutine()
         {

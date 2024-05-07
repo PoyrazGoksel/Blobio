@@ -30,12 +30,37 @@ namespace Pathfinding {
 		///
 		/// See: <see cref="shouldRecalculatePath"/>
 		/// See: <see cref="SearchPath"/>
+		///
+		/// Deprecated: This has been renamed to <see cref="autoRepath.period"/>.
+		/// See: <see cref="AutoRepathPolicy"/>
 		/// </summary>
-		public float repathRate = 0.5f;
+		public float repathRate {
+			get {
+				return this.autoRepath.period;
+			}
+			set {
+				this.autoRepath.period = value;
+			}
+		}
 
-		/// <summary>\copydoc Pathfinding::IAstarAI::canSearch</summary>
-		[UnityEngine.Serialization.FormerlySerializedAs("repeatedlySearchPaths")]
-		public bool canSearch = true;
+		/// <summary>
+		/// \copydoc Pathfinding::IAstarAI::canSearch
+		/// Deprecated: This has been superseded by <see cref="autoRepath.mode"/>.
+		/// </summary>
+		public bool canSearch {
+			get {
+				return this.autoRepath.mode != AutoRepathPolicy.Mode.Never;
+			}
+			set {
+				if (value) {
+					if (this.autoRepath.mode == AutoRepathPolicy.Mode.Never) {
+						this.autoRepath.mode = AutoRepathPolicy.Mode.EveryNSeconds;
+					}
+				} else {
+					this.autoRepath.mode = AutoRepathPolicy.Mode.Never;
+				}
+			}
+		}
 
 		/// <summary>\copydoc Pathfinding::IAstarAI::canMove</summary>
 		public bool canMove = true;
@@ -79,6 +104,17 @@ namespace Pathfinding {
 		[HideInInspector]
 		[FormerlySerializedAs("centerOffset")]
 		float centerOffsetCompatibility = float.NaN;
+
+		[SerializeField]
+		[HideInInspector]
+		[UnityEngine.Serialization.FormerlySerializedAs("repathRate")]
+		float repathRateCompatibility = float.NaN;
+
+		[SerializeField]
+		[HideInInspector]
+		[UnityEngine.Serialization.FormerlySerializedAs("canSearch")]
+		[UnityEngine.Serialization.FormerlySerializedAs("repeatedlySearchPaths")]
+		bool canSearchCompability = false;
 
 		/// <summary>
 		/// Determines which direction the agent moves in.
@@ -136,7 +172,16 @@ namespace Pathfinding {
 		/// Rotation of the agent.
 		/// If <see cref="updateRotation"/> is true then this value is identical to transform.rotation.
 		/// </summary>
-		public Quaternion rotation { get { return updateRotation ? tr.rotation : simulatedRotation; } }
+		public Quaternion rotation {
+			get { return updateRotation ? tr.rotation : simulatedRotation; }
+			set {
+				if (updateRotation) {
+					tr.rotation = value;
+				} else {
+					simulatedRotation = value;
+				}
+			}
+		}
 
 		/// <summary>Accumulated movement deltas from the <see cref="Move"/> method</summary>
 		Vector3 accumulatedMovementDelta = Vector3.zero;
@@ -206,6 +251,12 @@ namespace Pathfinding {
 		[System.NonSerialized]
 		public bool updateRotation = true;
 
+		/// <summary>
+		/// Determines how the agent recalculates its path automatically.
+		/// This corresponds to the settings under the "Recalculate Paths Automatically" field in the inspector.
+		/// </summary>
+		public AutoRepathPolicy autoRepath = new AutoRepathPolicy();
+
 		/// <summary>Indicates if gravity is used during this frame</summary>
 		protected bool usingGravity { get; set; }
 
@@ -226,9 +277,6 @@ namespace Pathfinding {
 
 		/// <summary>Only when the previous path has been calculated should the script consider searching for a new path</summary>
 		protected bool waitingForPathCalculation = false;
-
-		/// <summary>Time when the last path request was started</summary>
-		protected float lastRepath = float.NegativeInfinity;
 
 		[UnityEngine.Serialization.FormerlySerializedAs("target")][SerializeField][HideInInspector]
 		Transform targetCompatibility;
@@ -274,11 +322,13 @@ namespace Pathfinding {
 			}
 		}
 
-		/// <summary>
-		/// Velocity that this agent wants to move with.
-		/// Includes gravity and local avoidance if applicable.
-		/// </summary>
-		public Vector3 desiredVelocity { get { return lastDeltaTime > 0.00001f ? movementPlane.ToWorld(lastDeltaPosition / lastDeltaTime, verticalVelocity) : Vector3.zero; } }
+		/// <summary>\copydoc Pathfinding::IAstarAI::desiredVelocity</summary>
+		public Vector3 desiredVelocity {
+			get { return lastDeltaTime > 0.00001f ? movementPlane.ToWorld(lastDeltaPosition / lastDeltaTime, verticalVelocity) : Vector3.zero; }
+		}
+
+		/// <summary>\copydoc Pathfinding::IAstarAI::endOfPath</summary>
+		public abstract Vector3 endOfPath { get; }
 
 		/// <summary>\copydoc Pathfinding::IAstarAI::isStopped</summary>
 		public bool isStopped { get; set; }
@@ -289,7 +339,7 @@ namespace Pathfinding {
 		/// <summary>True if the path should be automatically recalculated as soon as possible</summary>
 		protected virtual bool shouldRecalculatePath {
 			get {
-				return Time.time - lastRepath >= repathRate && !waitingForPathCalculation && canSearch && !float.IsPositiveInfinity(destination.x);
+				return !waitingForPathCalculation && autoRepath.ShouldRecalculatePath(position, radius, destination);
 			}
 		}
 
@@ -338,8 +388,8 @@ namespace Pathfinding {
 			if (startHasRun) {
 				// Clamp the agent to the navmesh (which is what the Teleport call will do essentially. Though only some movement scripts require this, like RichAI).
 				// The Teleport call will also make sure some variables are properly initialized (like #prevPosition1 and #prevPosition2)
-				Teleport(position, false);
-				lastRepath = float.NegativeInfinity;
+				if (canMove) Teleport(position, false);
+				autoRepath.Reset();
 				if (shouldRecalculatePath) SearchPath();
 			}
 		}
@@ -410,7 +460,7 @@ namespace Pathfinding {
 		}
 
 		/// <summary>Called during either Update or FixedUpdate depending on if rigidbodies are used for movement or not</summary>
-		protected abstract void MovementUpdateInternal (float deltaTime, out Vector3 nextPosition, out Quaternion nextRotation);
+		protected abstract void MovementUpdateInternal(float deltaTime, out Vector3 nextPosition, out Quaternion nextRotation);
 
 		/// <summary>
 		/// Outputs the start point and end point of the next automatic path request.
@@ -428,21 +478,12 @@ namespace Pathfinding {
 			if (float.IsPositiveInfinity(destination.x)) return;
 			if (onSearchPath != null) onSearchPath();
 
-			lastRepath = Time.time;
-			waitingForPathCalculation = true;
-
-			seeker.CancelCurrentPathRequest();
-
 			Vector3 start, end;
 			CalculatePathRequestEndpoints(out start, out end);
 
-			// Alternative way of requesting the path
-			//ABPath p = ABPath.Construct(start, end, null);
-			//seeker.StartPath(p);
-
-			// This is where we should search to
 			// Request a path to be calculated from our current position to the destination
-			seeker.StartPath(start, end);
+			ABPath p = ABPath.Construct(start, end, null);
+			SetPath(p, false);
 		}
 
 		/// <summary>
@@ -458,7 +499,7 @@ namespace Pathfinding {
 		}
 
 		/// <summary>Called when a requested path has been calculated</summary>
-		protected abstract void OnPathComplete (Path newPath);
+		protected abstract void OnPathComplete(Path newPath);
 
 		/// <summary>
 		/// Clears the current path of the agent.
@@ -468,20 +509,24 @@ namespace Pathfinding {
 		/// See: <see cref="SetPath"/>
 		/// See: <see cref="isStopped"/>
 		/// </summary>
-		protected abstract void ClearPath ();
+		protected abstract void ClearPath();
 
 		/// <summary>\copydoc Pathfinding::IAstarAI::SetPath</summary>
-		public void SetPath (Path path) {
+		public void SetPath (Path path, bool updateDestinationFromPath = true) {
+			if (updateDestinationFromPath && path is ABPath abPath && !(path is RandomPath)) {
+				this.destination = abPath.originalEndPoint;
+			}
+
 			if (path == null) {
 				CancelCurrentPathRequest();
 				ClearPath();
 			} else if (path.PipelineState == PathState.Created) {
 				// Path has not started calculation yet
-				lastRepath = Time.time;
 				waitingForPathCalculation = true;
 				seeker.CancelCurrentPathRequest();
 				seeker.StartPath(path);
-			} else if (path.PipelineState == PathState.Returned) {
+				autoRepath.DidRecalculatePath(destination);
+			} else if (path.PipelineState >= PathState.Returning) {
 				// Path has already been calculated
 
 				// We might be calculating another path at the same time, and we don't want that path to override this one. So cancel it.
@@ -708,6 +753,8 @@ namespace Pathfinding {
 			}
 
 			if (!float.IsPositiveInfinity(destination.x) && Application.isPlaying) Draw.Gizmos.CircleXZ(destination, 0.2f, Color.blue);
+
+			autoRepath.DrawGizmos(position, radius);
 		}
 
 		protected override void Reset () {
@@ -735,7 +782,11 @@ namespace Pathfinding {
 			#pragma warning disable 618
 			if (unityThread && targetCompatibility != null) target = targetCompatibility;
 			#pragma warning restore 618
-			return 1;
+			if (version <= 3) {
+				repathRate = repathRateCompatibility;
+				canSearch = canSearchCompability;
+			}
+			return 5;
 		}
 	}
 }

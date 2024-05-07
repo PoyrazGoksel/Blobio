@@ -3,8 +3,8 @@ using UnityEngine;
 namespace Pathfinding {
 	/// <summary>
 	/// Finds a path in a random direction from the start node.
-	/// \ingroup paths
-	/// Terminates and returns when G \>= length (passed to the constructor) + RandomPath.spread or when there are no more nodes left to search.\n
+	///
+	/// Terminates and returns when G \>= length (passed to the constructor) + RandomPath.spread or when there are no more nodes left to search.
 	///
 	/// <code>
 	///
@@ -69,7 +69,7 @@ namespace Pathfinding {
 		/// <summary>Random number generator</summary>
 		readonly System.Random rnd = new System.Random();
 
-		internal override bool FloodingPath {
+		public override bool FloodingPath {
 			get {
 				return true;
 			}
@@ -130,7 +130,7 @@ namespace Pathfinding {
 				endNode = path[path.Count-1];
 				endPoint = (Vector3)endNode.position;
 				originalEndPoint = endPoint;
-
+				cost = pathHandler.GetPathNode(endNode).G;
 				hTarget = endNode.position;
 			}
 			if (callback != null) {

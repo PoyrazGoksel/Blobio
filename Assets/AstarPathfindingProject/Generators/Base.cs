@@ -14,13 +14,13 @@ namespace Pathfinding {
 	/// </summary>
 	public interface IGraphInternals {
 		string SerializedEditorSettings { get; set; }
-		void OnDestroy ();
-		void DestroyAllNodes ();
-		IEnumerable<Progress> ScanInternal ();
-		void SerializeExtraInfo (GraphSerializationContext ctx);
-		void DeserializeExtraInfo (GraphSerializationContext ctx);
-		void PostDeserialization (GraphSerializationContext ctx);
-		void DeserializeSettingsCompatibility (GraphSerializationContext ctx);
+		void OnDestroy();
+		void DestroyAllNodes();
+		IEnumerable<Progress> ScanInternal();
+		void SerializeExtraInfo(GraphSerializationContext ctx);
+		void DeserializeExtraInfo(GraphSerializationContext ctx);
+		void PostDeserialization(GraphSerializationContext ctx);
+		void DeserializeSettingsCompatibility(GraphSerializationContext ctx);
 	}
 
 	/// <summary>Base class for all graphs</summary>
@@ -78,6 +78,17 @@ namespace Pathfinding {
 		internal bool exists { get { return active != null; } }
 
 		/// <summary>
+		/// True if the graph has been scanned and contains nodes.
+		///
+		/// Graphs are typically scanned when the game starts, but they can also be scanned manually.
+		///
+		/// If a graph has not been scanned, it does not contain any nodes and it not possible to use it for pathfinding.
+		///
+		/// See: <see cref="AstarPath.Scan(NavGraph)"/>
+		/// </summary>
+		public abstract bool isScanned { get; }
+
+		/// <summary>
 		/// Number of nodes in the graph.
 		/// Note that this is, unless the graph type has overriden it, an O(n) operation.
 		///
@@ -121,12 +132,18 @@ namespace Pathfinding {
 		/// var gg = AstarPath.active.data.gridGraph;
 		///
 		/// List<GraphNode> nodes = new List<GraphNode>();
+		///
 		/// gg.GetNodes((System.Action<GraphNode>)nodes.Add);
 		/// </code>
 		///
 		/// See: <see cref="Pathfinding.AstarData.GetNodes"/>
 		/// </summary>
-		public abstract void GetNodes (System.Action<GraphNode> action);
+		public abstract void GetNodes(System.Action<GraphNode> action);
+
+		/// <summary>True if the point is inside the bounding box of this graph</summary>
+		public virtual bool IsInsideBounds (Vector3 point) {
+			return true;
+		}
 
 		/// <summary>
 		/// A matrix for translating/rotating/scaling the graph.
@@ -160,6 +177,20 @@ namespace Pathfinding {
 		[System.Obsolete("Use RelocateNodes(Matrix4x4) instead. To keep the same behavior you can call RelocateNodes(newMatrix * oldMatrix.inverse).")]
 		public void RelocateNodes (Matrix4x4 oldMatrix, Matrix4x4 newMatrix) {
 			RelocateNodes(newMatrix * oldMatrix.inverse);
+		}
+
+		/// <summary>
+		/// Throws an exception if it is not safe to update internal graph data right now.
+		///
+		/// It is safe to update graphs when graphs are being scanned, or inside a work item.
+		/// In other cases pathfinding could be running at the same time, which would not appreciate graph data changing under its feet.
+		///
+		/// See: <see cref="AstarPath.AddWorkItem"/>
+		/// </summary>
+		protected void AssertSafeToUpdateGraph () {
+			if (!active.IsAnyWorkItemInProgress && !active.isScanning) {
+				throw new System.Exception("Trying to update graphs when it is not safe to do so. Graph updates must be done inside a work item or when a graph is being scanned. See AstarPath.AddWorkItem");
+			}
 		}
 
 		/// <summary>
@@ -250,7 +281,7 @@ namespace Pathfinding {
 		}
 
 		/// <summary>
-		/// Returns the nearest node to a position using the specified \link Pathfinding.NNConstraint constraint \endlink.
+		/// Returns the nearest node to a position using the specified <see cref="Pathfinding.NNConstraint"/>.
 		/// Returns: an NNInfo. This method will only return an empty NNInfo if there are no nodes which comply with the specified constraint.
 		/// </summary>
 		public virtual NNInfoInternal GetNearestForce (Vector3 position, NNConstraint constraint) {
@@ -302,15 +333,15 @@ namespace Pathfinding {
 		/// Progress objects can be yielded to show progress info in the editor and to split up processing
 		/// over several frames when using async scanning.
 		/// </summary>
-		protected abstract IEnumerable<Progress> ScanInternal ();
+		protected abstract IEnumerable<Progress> ScanInternal();
 
 		/// <summary>
 		/// Serializes graph type specific node data.
 		/// This function can be overriden to serialize extra node information (or graph information for that matter)
 		/// which cannot be serialized using the standard serialization.
 		/// Serialize the data in any way you want and return a byte array.
-		/// When loading, the exact same byte array will be passed to the DeserializeExtraInfo function.\n
-		/// These functions will only be called if node serialization is enabled.\n
+		/// When loading, the exact same byte array will be passed to the DeserializeExtraInfo function.
+		/// These functions will only be called if node serialization is enabled.
 		/// </summary>
 		protected virtual void SerializeExtraInfo (GraphSerializationContext ctx) {
 		}
@@ -406,7 +437,7 @@ namespace Pathfinding {
 		/// by the <see cref="type"/> field.
 		///
 		/// A diameter of 1 means that the shape has a diameter equal to the node's width,
-		/// or in other words it is equal to \link Pathfinding.GridGraph.nodeSize nodeSize \endlink.
+		/// or in other words it is equal to <see cref="Pathfinding.GridGraph.nodeSize"/>.
 		///
 		/// If <see cref="type"/> is set to Ray, this does not affect anything.
 		///
@@ -419,6 +450,9 @@ namespace Pathfinding {
 		/// If <see cref="type"/> is set to Sphere, this does not affect anything.
 		///
 		/// [Open online documentation to see images]
+		///
+		/// Warning: In contrast to Unity's capsule collider and character controller this height does not include the end spheres of the capsule, but only the cylinder part.
+		/// This is mostly for historical reasons.
 		/// </summary>
 		public float height = 2F;
 
@@ -464,7 +498,7 @@ namespace Pathfinding {
 
 		/// <summary>
 		/// Diameter of the thick raycast in nodes.
-		/// 1 equals \link Pathfinding.GridGraph.nodeSize nodeSize \endlink
+		/// 1 equals <see cref="Pathfinding.GridGraph.nodeSize"/>
 		/// </summary>
 		public float thickRaycastDiameter = 1;
 
@@ -495,16 +529,25 @@ namespace Pathfinding {
 		/// </summary>
 		private Vector3 upheight;
 
+		/// <summary>Used for 2D collision queries</summary>
+		private ContactFilter2D contactFilter;
+
+		/// <summary>
+		/// Just so that the Physics2D.OverlapPoint method has some buffer to store things in.
+		/// We never actually read from this array, so we don't even care if this is thread safe.
+		/// </summary>
+		private static Collider2D[] dummyArray = new Collider2D[1];
+
 		/// <summary>
 		/// <see cref="diameter"/> * scale * 0.5.
-		/// Where scale usually is \link Pathfinding.GridGraph.nodeSize nodeSize \endlink
+		/// Where scale usually is <see cref="Pathfinding.GridGraph.nodeSize"/>
 		/// See: Initialize
 		/// </summary>
 		private float finalRadius;
 
 		/// <summary>
 		/// <see cref="thickRaycastDiameter"/> * scale * 0.5.
-		/// Where scale usually is \link Pathfinding.GridGraph.nodeSize nodeSize \endlink See: Initialize
+		/// Where scale usually is <see cref="Pathfinding.GridGraph.nodeSize"/> See: Initialize
 		/// </summary>
 		private float finalRaycastRadius;
 
@@ -523,11 +566,12 @@ namespace Pathfinding {
 			upheight = up*height;
 			finalRadius = diameter*scale*0.5F;
 			finalRaycastRadius = thickRaycastDiameter*scale*0.5F;
+			contactFilter = new ContactFilter2D { layerMask = mask, useDepth = false, useLayerMask = true, useNormalAngle = false, useTriggers = false };
 		}
 
 		/// <summary>
-		/// Returns if the position is obstructed.
-		/// If <see cref="collisionCheck"/> is false, this will always return true.\n
+		/// Returns true if the position is not obstructed.
+		/// If <see cref="collisionCheck"/> is false, this will always return true.
 		/// </summary>
 		public bool Check (Vector3 position) {
 			if (!collisionCheck) {
@@ -538,9 +582,9 @@ namespace Pathfinding {
 				switch (type) {
 				case ColliderType.Capsule:
 				case ColliderType.Sphere:
-					return Physics2D.OverlapCircle(position, finalRadius, mask) == null;
+					return Physics2D.OverlapCircle(position, finalRadius, contactFilter, dummyArray) == 0;
 				default:
-					return Physics2D.OverlapPoint(position, mask) == null;
+					return Physics2D.OverlapPoint(position, contactFilter, dummyArray) == 0;
 				}
 			}
 
@@ -575,7 +619,7 @@ namespace Pathfinding {
 
 		/// <summary>
 		/// Returns the position with the correct height.
-		/// If <see cref="heightCheck"/> is false, this will return position.\n
+		/// If <see cref="heightCheck"/> is false, this will return position.
 		/// walkable will be set to false if nothing was hit.
 		/// The ray will check a tiny bit further than to the grids base to avoid floating point errors when the ground is exactly at the base of the grid
 		/// </summary>

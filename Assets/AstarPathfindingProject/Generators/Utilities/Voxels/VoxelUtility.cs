@@ -22,7 +22,7 @@ namespace Pathfinding.Voxels {
 		/// </summary>
 		public static Int3[] RemoveDuplicateVertices (Int3[] vertices, int[] triangles) {
 			// Get a dictionary from an object pool to avoid allocating a new one
-			var firstVerts = ObjectPoolSimple<Dictionary<Int3, int> >.Claim ();
+			var firstVerts = ObjectPoolSimple<Dictionary<Int3, int> >.Claim();
 
 			firstVerts.Clear();
 
@@ -43,7 +43,7 @@ namespace Pathfinding.Voxels {
 			}
 
 			firstVerts.Clear();
-			ObjectPoolSimple<Dictionary<Int3, int> >.Release (ref firstVerts);
+			ObjectPoolSimple<Dictionary<Int3, int> >.Release(ref firstVerts);
 
 			for (int i = 0; i < triangles.Length; i++) {
 				triangles[i] = compressedPointers[triangles[i]];

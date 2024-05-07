@@ -35,7 +35,7 @@ namespace Pathfinding {
 		public static List<PathPart> SplitIntoParts (Path path) {
 			var nodes = path.path;
 
-			var result = ListPool<PathPart>.Claim ();
+			var result = ListPool<PathPart>.Claim();
 
 			if (nodes == null || nodes.Count == 0) {
 				return result;
@@ -110,14 +110,14 @@ namespace Pathfinding {
 
 		public static FunnelPortals ConstructFunnelPortals (List<GraphNode> nodes, PathPart part) {
 			if (nodes == null || nodes.Count == 0) {
-				return new FunnelPortals { left = ListPool<Vector3>.Claim (0), right = ListPool<Vector3>.Claim (0) };
+				return new FunnelPortals { left = ListPool<Vector3>.Claim(0), right = ListPool<Vector3>.Claim(0) };
 			}
 
 			if (part.endIndex < part.startIndex || part.startIndex < 0 || part.endIndex > nodes.Count) throw new System.ArgumentOutOfRangeException();
 
 			// Claim temporary lists and try to find lists with a high capacity
-			var left = ListPool<Vector3>.Claim (nodes.Count+1);
-			var right = ListPool<Vector3>.Claim (nodes.Count+1);
+			var left = ListPool<Vector3>.Claim(nodes.Count+1);
+			var right = ListPool<Vector3>.Claim(nodes.Count+1);
 
 			// Add start point
 			left.Add(part.startPoint);
@@ -300,8 +300,8 @@ namespace Pathfinding {
 			if (funnel.left.Count != funnel.right.Count) throw new System.ArgumentException("funnel.left.Count != funnel.right.Count");
 
 			// Get arrays at least as large as the number of portals
-			var leftArr = ArrayPool<Vector2>.Claim (funnel.left.Count);
-			var rightArr = ArrayPool<Vector2>.Claim (funnel.left.Count);
+			var leftArr = ArrayPool<Vector2>.Claim(funnel.left.Count);
+			var rightArr = ArrayPool<Vector2>.Claim(funnel.left.Count);
 
 			if (unwrap) {
 				Unwrap(funnel, leftArr, rightArr);
@@ -314,7 +314,7 @@ namespace Pathfinding {
 			}
 
 			int startIndex = FixFunnel(leftArr, rightArr, funnel.left.Count);
-			var intermediateResult = ListPool<int>.Claim ();
+			var intermediateResult = ListPool<int>.Claim();
 			if (startIndex == -1) {
 				// If funnel algorithm failed, fall back to a simple line
 				intermediateResult.Add(0);
@@ -325,7 +325,7 @@ namespace Pathfinding {
 			}
 
 			// Get list for the final result
-			var result = ListPool<Vector3>.Claim (intermediateResult.Count);
+			var result = ListPool<Vector3>.Claim(intermediateResult.Count);
 
 			Vector2 prev2D = leftArr[0];
 			var prevIdx = 0;
@@ -336,7 +336,11 @@ namespace Pathfinding {
 					// Check intersections with every portal segment
 					var next2D = idx >= 0 ? leftArr[idx] : rightArr[-idx];
 					for (int j = prevIdx + 1; j < System.Math.Abs(idx); j++) {
-						var factor = VectorMath.LineIntersectionFactorXZ(FromXZ(leftArr[j]), FromXZ(rightArr[j]), FromXZ(prev2D), FromXZ(next2D));
+						// var factor = VectorMath.LineIntersectionFactorXZ(FromXZ(leftArr[j]), FromXZ(rightArr[j]), FromXZ(prev2D), FromXZ(next2D));
+						if (!VectorMath.LineLineIntersectionFactor(leftArr[j], rightArr[j] - leftArr[j], prev2D, next2D - prev2D, out float factor)) {
+							// This really shouldn't happen
+							factor = 0.5f;
+						}
 						result.Add(Vector3.Lerp(funnel.left[j], funnel.right[j], factor));
 					}
 
@@ -352,9 +356,9 @@ namespace Pathfinding {
 			}
 
 			// Release lists back to the pool
-			ListPool<int>.Release (ref intermediateResult);
-			ArrayPool<Vector2>.Release (ref leftArr);
-			ArrayPool<Vector2>.Release (ref rightArr);
+			ListPool<int>.Release(ref intermediateResult);
+			ArrayPool<Vector2>.Release(ref leftArr);
+			ArrayPool<Vector2>.Release(ref rightArr);
 			return result;
 		}
 

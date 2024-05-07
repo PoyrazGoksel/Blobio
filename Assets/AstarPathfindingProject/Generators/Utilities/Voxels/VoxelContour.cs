@@ -4,9 +4,6 @@ using System.Collections.Generic;
 namespace Pathfinding.Voxels {
 	public partial class Voxelize {
 		public void BuildContours (float maxError, int maxEdgeLength, VoxelContourSet cset, int buildFlags) {
-			AstarProfiler.StartProfile("Build Contours");
-
-			AstarProfiler.StartProfile("- Init");
 			int w = voxelArea.width;
 			int d = voxelArea.depth;
 
@@ -20,8 +17,6 @@ namespace Pathfinding.Voxels {
 			//cset.conts = new VoxelContour[maxContours];
 			List<VoxelContour> contours = new List<VoxelContour>(maxContours);
 
-			AstarProfiler.EndProfile("- Init");
-			AstarProfiler.StartProfile("- Mark Boundaries");
 
 			//cset.nconts = 0;
 
@@ -68,11 +63,9 @@ namespace Pathfinding.Voxels {
 				}
 			}
 
-			AstarProfiler.EndProfile("- Mark Boundaries");
 
-			AstarProfiler.StartProfile("- Simplify Contours");
-			List<int> verts = Pathfinding.Util.ListPool<int>.Claim (256);//new List<int> (256);
-			List<int> simplified = Pathfinding.Util.ListPool<int>.Claim (64);//new List<int> (64);
+			List<int> verts = Pathfinding.Util.ListPool<int>.Claim(256);//new List<int> (256);
+			List<int> simplified = Pathfinding.Util.ListPool<int>.Claim(64);//new List<int> (64);
 
 			for (int z = 0; z < wd; z += voxelArea.width) {
 				for (int x = 0; x < voxelArea.width; x++) {
@@ -103,7 +96,7 @@ namespace Pathfinding.Voxels {
 						RemoveDegenerateSegments(simplified);
 
 						VoxelContour contour = new VoxelContour();
-						contour.verts = Pathfinding.Util.ArrayPool<int>.Claim (simplified.Count);//simplified.ToArray ();
+						contour.verts = Pathfinding.Util.ArrayPool<int>.Claim(simplified.Count);//simplified.ToArray ();
 						for (int j = 0; j < simplified.Count; j++) contour.verts[j] = simplified[j];
 #if ASTAR_RECAST_INCLUDE_RAW_VERTEX_CONTOUR
 						//Not used at the moment, just debug stuff
@@ -151,12 +144,10 @@ namespace Pathfinding.Voxels {
 				}
 			}
 
-			Pathfinding.Util.ListPool<int>.Release (ref verts);
-			Pathfinding.Util.ListPool<int>.Release (ref simplified);
+			Pathfinding.Util.ListPool<int>.Release(ref verts);
+			Pathfinding.Util.ListPool<int>.Release(ref simplified);
 
-			AstarProfiler.EndProfile("- Simplify Contours");
 
-			AstarProfiler.StartProfile("- Fix Contours");
 
 			// Check and merge droppings.
 			// Sometimes the previous algorithms can fail and create several contours
@@ -260,10 +251,6 @@ namespace Pathfinding.Voxels {
 			}
 
 			cset.conts = contours;
-
-			AstarProfiler.EndProfile("- Fix Contours");
-
-			AstarProfiler.EndProfile("Build Contours");
 		}
 
 		void GetClosestIndices (int[] vertsa, int nvertsa,
@@ -302,8 +289,8 @@ namespace Pathfinding.Voxels {
 		static void ReleaseContours (VoxelContourSet cset) {
 			for (int i = 0; i < cset.conts.Count; i++) {
 				VoxelContour cont = cset.conts[i];
-				Pathfinding.Util.ArrayPool<int>.Release (ref cont.verts);
-				Pathfinding.Util.ArrayPool<int>.Release (ref cont.rverts);
+				Pathfinding.Util.ArrayPool<int>.Release(ref cont.verts);
+				Pathfinding.Util.ArrayPool<int>.Release(ref cont.rverts);
 			}
 			cset.conts = null;
 		}
@@ -311,7 +298,7 @@ namespace Pathfinding.Voxels {
 		public static bool MergeContours (ref VoxelContour ca, ref VoxelContour cb, int ia, int ib) {
 			int maxVerts = ca.nverts + cb.nverts + 2;
 
-			int[] verts = Pathfinding.Util.ArrayPool<int>.Claim (maxVerts*4);
+			int[] verts = Pathfinding.Util.ArrayPool<int>.Claim(maxVerts*4);
 
 			//if (!verts)
 			//	return false;
@@ -340,13 +327,13 @@ namespace Pathfinding.Voxels {
 				nv++;
 			}
 
-			Pathfinding.Util.ArrayPool<int>.Release (ref ca.verts);
-			Pathfinding.Util.ArrayPool<int>.Release (ref cb.verts);
+			Pathfinding.Util.ArrayPool<int>.Release(ref ca.verts);
+			Pathfinding.Util.ArrayPool<int>.Release(ref cb.verts);
 
 			ca.verts = verts;
 			ca.nverts = nv;
 
-			cb.verts = Pathfinding.Util.ArrayPool<int>.Claim (0);
+			cb.verts = Pathfinding.Util.ArrayPool<int>.Claim(0);
 			cb.nverts = 0;
 
 			return true;

@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 
 namespace Pathfinding {
-	[HelpURL("http://arongranberg.com/astar/docs/class_pathfinding_1_1_animation_link.php")]
+	[HelpURL("https://arongranberg.com/astar/documentation/stable/class_pathfinding_1_1_animation_link.php")]
 	public class AnimationLink : NodeLink2 {
 		public string clip;
 		public float animSpeed = 1;
@@ -110,7 +110,7 @@ namespace Pathfinding {
 
 		public override void OnDrawGizmosSelected () {
 			base.OnDrawGizmosSelected();
-			List<Vector3> buffer = Pathfinding.Util.ListPool<Vector3>.Claim ();
+			List<Vector3> buffer = Pathfinding.Util.ListPool<Vector3>.Claim();
 			Vector3 endPosition = Vector3.zero;
 			CalculateOffsets(buffer, out endPosition);
 			Gizmos.color = Color.blue;

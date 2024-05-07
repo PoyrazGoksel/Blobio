@@ -175,6 +175,13 @@ namespace Pathfinding.Serialization {
 		/// <summary>Settings for serialization</summary>
 		private SerializeSettings settings;
 
+		/// <summary>
+		/// Root GameObject used for deserialization.
+		/// This should be the GameObject which holds the AstarPath component.
+		/// Important when deserializing when the component is on a prefab.
+		/// </summary>
+		private GameObject contextRoot;
+
 		/// <summary>Graphs that are being serialized or deserialized</summary>
 		private NavGraph[] graphs;
 
@@ -220,13 +227,12 @@ namespace Pathfinding.Serialization {
 		/// <summary>Cached version object for 4.1.0</summary>
 		public static readonly System.Version V4_1_0 = new System.Version(4, 1, 0);
 
-		public AstarSerializer (AstarData data) {
-			this.data = data;
-			settings = SerializeSettings.Settings;
+		public AstarSerializer (AstarData data, GameObject contextRoot) : this(data, SerializeSettings.Settings, contextRoot) {
 		}
 
-		public AstarSerializer (AstarData data, SerializeSettings settings) {
+		public AstarSerializer (AstarData data, SerializeSettings settings, GameObject contextRoot) {
 			this.data = data;
+			this.contextRoot = contextRoot;
 			this.settings = settings;
 		}
 
@@ -262,6 +268,8 @@ namespace Pathfinding.Serialization {
 			zip = new ZipFile();
 			zip.AlternateEncoding = System.Text.Encoding.UTF8;
 			zip.AlternateEncodingUsage = ZipOption.Always;
+			// Don't use parallel defate
+			zip.ParallelDeflateThreshold = -1;
 #endif
 			meta = new GraphMeta();
 		}
@@ -499,6 +507,8 @@ namespace Pathfinding.Serialization {
 				zip = new ZipFile(zipStream);
 #else
 				zip = ZipFile.Read(zipStream);
+				// Don't use parallel defate
+				zip.ParallelDeflateThreshold = -1;
 #endif
 			} catch (Exception e) {
 				// Catches exceptions when an invalid zip file is found
@@ -519,11 +529,6 @@ namespace Pathfinding.Serialization {
 			if (FullyDefinedVersion(meta.version) > FullyDefinedVersion(AstarPath.Version)) {
 				Debug.LogWarning("Trying to load data from a newer version of the A* Pathfinding Project\nCurrent version: "+AstarPath.Version+" Data version: "+meta.version +
 					"\nThis is usually fine as the stored data is usually backwards and forwards compatible." +
-					"\nHowever node data (not settings) can get corrupted between versions (even though I try my best to keep compatibility), so it is recommended " +
-					"to recalculate any caches (those for faster startup) and resave any files. Even if it seems to load fine, it might cause subtle bugs.\n");
-			} else if (FullyDefinedVersion(meta.version) < FullyDefinedVersion(AstarPath.Version)) {
-				Debug.LogWarning("Upgrading serialized pathfinding data from version " + meta.version + " to " + AstarPath.Version +
-					"\nThis is usually fine, it just means you have upgraded to a new version." +
 					"\nHowever node data (not settings) can get corrupted between versions (even though I try my best to keep compatibility), so it is recommended " +
 					"to recalculate any caches (those for faster startup) and resave any files. Even if it seems to load fine, it might cause subtle bugs.\n");
 			}
@@ -562,7 +567,7 @@ namespace Pathfinding.Serialization {
 
 			if (ContainsEntry(jsonName)) {
 				// Read the graph settings
-				TinyJsonDeserializer.Deserialize(GetString(GetEntry(jsonName)), graphType, graph);
+				TinyJsonDeserializer.Deserialize(GetString(GetEntry(jsonName)), graphType, graph, contextRoot);
 			} else if (ContainsEntry(binName)) {
 				var reader = GetBinaryReader(GetEntry(binName));
 				var ctx = new GraphSerializationContext(reader, null, graph.graphIndex, meta);
@@ -737,7 +742,7 @@ namespace Pathfinding.Serialization {
 		/// Deserializes graph editor settings.
 		/// For future compatibility this method does not assume that the graphEditors array matches the <see cref="graphs"/> array in order and/or count.
 		/// It searches for a matching graph (matching if graphEditor.target == graph) for every graph editor.
-		/// Multiple graph editors should not refer to the same graph.\n
+		/// Multiple graph editors should not refer to the same graph.
 		/// Note: Stored in files named "graph<see cref="_editor.json"/>" where # is the graph number.
 		///
 		/// Note: This method is only used for compatibility, newer versions store everything in the graph.serializedEditorSettings field which is already serialized.
@@ -813,6 +818,7 @@ namespace Pathfinding.Serialization {
 			meta.typeNames = new List<string>();
 			count = reader.ReadInt32();
 			for (int i = 0; i < count; i++) meta.typeNames.Add(reader.ReadString());
+			reader.Close();
 
 			return meta;
 		}

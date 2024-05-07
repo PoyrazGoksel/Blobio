@@ -18,8 +18,6 @@ namespace Pathfinding {
 	/// it can be slower if all target points are relatively far away because then it will have to search a much larger
 	/// region since it will not use any heuristics.
 	///
-	/// \ingroup paths
-	///
 	/// See: Seeker.StartMultiTargetPath
 	/// See: MultiTargetPathExample.cs (view in online documentation for working links) "Example of how to use multi-target-paths"
 	///
@@ -64,11 +62,11 @@ namespace Pathfinding {
 
 		/// <summary>
 		/// How to calculate the heuristic.
-		/// The \link <see cref="hTarget"/> heuristic target point \endlink can be calculated in different ways,
+		/// The <see cref="<see cref="hTarget"/> heuristic target"/> can be calculated in different ways,
 		/// by taking the Average position of all targets, or taking the mid point of them (i.e center of the AABB encapsulating all targets).
 		///
-		/// The one which works best seems to be Sequential, it sets <see cref="hTarget"/> to the target furthest away, and when that target is found, it moves on to the next one.\n
-		/// Some modes have the option to be 'moving' (e.g 'MovingAverage'), that means that it is updated every time a target is found.\n
+		/// The one which works best seems to be Sequential, it sets <see cref="hTarget"/> to the target furthest away, and when that target is found, it moves on to the next one.
+		/// Some modes have the option to be 'moving' (e.g 'MovingAverage'), that means that it is updated every time a target is found.
 		/// The H score is calculated according to AstarPath.heuristic
 		///
 		/// Note: If pathsForAll is false then this option is ignored and it is always treated as being set to None
@@ -144,14 +142,14 @@ namespace Pathfinding {
 		protected override void OnEnterPool () {
 			if (vectorPaths != null)
 				for (int i = 0; i < vectorPaths.Length; i++)
-					if (vectorPaths[i] != null) Util.ListPool<Vector3>.Release (vectorPaths[i]);
+					if (vectorPaths[i] != null) Util.ListPool<Vector3>.Release(vectorPaths[i]);
 
 			vectorPaths = null;
 			vectorPath = null;
 
 			if (nodePaths != null)
 				for (int i = 0; i < nodePaths.Length; i++)
-					if (nodePaths[i] != null) Util.ListPool<GraphNode>.Release (nodePaths[i]);
+					if (nodePaths[i] != null) Util.ListPool<GraphNode>.Release(nodePaths[i]);
 
 			nodePaths = null;
 			path = null;
@@ -199,6 +197,7 @@ namespace Pathfinding {
 				endPoint = targetPoints[target];
 				originalEndPoint = originalTargetPoints[target];
 			}
+			cost =  path != null? pathHandler.GetPathNode(endNode).G : 0;
 		}
 
 		protected override void ReturnPath () {
@@ -263,8 +262,8 @@ namespace Pathfinding {
 			Trace(nodeR);
 			vectorPaths[i] = vectorPath;
 			nodePaths[i] = path;
-			vectorPath = Util.ListPool<Vector3>.Claim ();
-			path = Util.ListPool<GraphNode>.Claim ();
+			vectorPath = Util.ListPool<Vector3>.Claim();
+			path = Util.ListPool<GraphNode>.Claim();
 
 			targetsFound[i] = true;
 
@@ -594,9 +593,7 @@ namespace Pathfinding {
 				}
 
 				// Select the node with the lowest F score and remove it from the open list
-				AstarProfiler.StartFastProfile(7);
 				currentR = pathHandler.heap.Remove();
-				AstarProfiler.EndFastProfile(7);
 
 				// Check for time every 500 nodes, roughly every 0.5 ms usually
 				if (counter > 500) {
@@ -634,7 +631,7 @@ namespace Pathfinding {
 			}
 		}
 
-		internal override string DebugString (PathLog logMode) {
+		protected override string DebugString (PathLog logMode) {
 			if (logMode == PathLog.None || (!error && logMode == PathLog.OnlyErrors)) {
 				return "";
 			}

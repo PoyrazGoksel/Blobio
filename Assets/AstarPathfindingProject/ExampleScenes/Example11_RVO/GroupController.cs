@@ -8,7 +8,7 @@ namespace Pathfinding.Examples {
 	/// RVO Example Scene Unit Controller.
 	/// Controls AIs and camera in the RVO example scene.
 	/// </summary>
-	[HelpURL("http://arongranberg.com/astar/docs/class_pathfinding_1_1_examples_1_1_group_controller.php")]
+	[HelpURL("https://arongranberg.com/astar/documentation/stable/class_pathfinding_1_1_examples_1_1_group_controller.php")]
 	public class GroupController : MonoBehaviour {
 		public GUIStyle selectionBox;
 		public bool adjustCamera = true;
@@ -25,7 +25,7 @@ namespace Pathfinding.Examples {
 
 		public void Start () {
 			cam = Camera.main;
-			var simu = FindObjectOfType(typeof(RVOSimulator)) as RVOSimulator;
+			var simu = RVOSimulator.active;
 			if (simu == null) {
 				this.enabled = false;
 				throw new System.Exception("No RVOSimulator in the scene. Please add one");
@@ -35,10 +35,6 @@ namespace Pathfinding.Examples {
 		}
 
 		public void Update () {
-			if (Screen.fullScreen && Screen.width != Screen.resolutions[Screen.resolutions.Length-1].width) {
-				Screen.SetResolution(Screen.resolutions[Screen.resolutions.Length-1].width, Screen.resolutions[Screen.resolutions.Length-1].height, true);
-			}
-
 			if (adjustCamera) {
 				//Adjust camera
 				List<Agent> agents = sim.GetAgents();
@@ -56,6 +52,7 @@ namespace Pathfinding.Examples {
 
 				var yCoord = Mathf.Max(hh, hv)*1.1f;
 				yCoord = Mathf.Max(yCoord, 20);
+				yCoord = Mathf.Min(yCoord, cam.farClipPlane - 1f);
 				cam.transform.position = Vector3.Lerp(cam.transform.position, new Vector3(0, yCoord, 0), Time.smoothDeltaTime*2);
 			}
 

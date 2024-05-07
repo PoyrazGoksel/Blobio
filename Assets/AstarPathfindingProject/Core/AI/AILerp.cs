@@ -7,6 +7,9 @@ namespace Pathfinding {
 
 	/// <summary>
 	/// Linearly interpolating movement script.
+	///
+	/// [Open online documentation to see images]
+	///
 	/// This movement script will follow the path exactly, it uses linear interpolation to move between the waypoints in the path.
 	/// This is desirable for some types of games.
 	/// It also works in 2D.
@@ -31,22 +34,47 @@ namespace Pathfinding {
 	/// [Open online documentation to see images]
 	/// [Open online documentation to see images]
 	/// You may also want to tweak the <see cref="rotationSpeed"/>.
-	///
-	/// \ingroup movementscripts
 	/// </summary>
 	[RequireComponent(typeof(Seeker))]
 	[AddComponentMenu("Pathfinding/AI/AILerp (2D,3D)")]
-	[HelpURL("http://arongranberg.com/astar/docs/class_pathfinding_1_1_a_i_lerp.php")]
+	[UniqueComponent(tag = "ai")]
+	[HelpURL("https://arongranberg.com/astar/documentation/stable/class_pathfinding_1_1_a_i_lerp.php")]
 	public class AILerp : VersionedMonoBehaviour, IAstarAI {
 		/// <summary>
 		/// Determines how often it will search for new paths.
 		/// If you have fast moving targets or AIs, you might want to set it to a lower value.
 		/// The value is in seconds between path requests.
+		///
+		/// Deprecated: This has been renamed to <see cref="autoRepath.period"/>.
+		/// See: <see cref="AutoRepathPolicy"/>
 		/// </summary>
-		public float repathRate = 0.5F;
+		public float repathRate {
+			get {
+				return this.autoRepath.period;
+			}
+			set {
+				this.autoRepath.period = value;
+			}
+		}
 
-		/// <summary>\copydoc Pathfinding::IAstarAI::canSearch</summary>
-		public bool canSearch = true;
+		/// <summary>
+		/// \copydoc Pathfinding::IAstarAI::canSearch
+		/// Deprecated: This has been superseded by <see cref="autoRepath.mode"/>.
+		/// </summary>
+		public bool canSearch {
+			get {
+				return this.autoRepath.mode != AutoRepathPolicy.Mode.Never;
+			}
+			set {
+				this.autoRepath.mode = value ? AutoRepathPolicy.Mode.EveryNSeconds : AutoRepathPolicy.Mode.Never;
+			}
+		}
+
+		/// <summary>
+		/// Determines how the agent recalculates its path automatically.
+		/// This corresponds to the settings under the "Recalculate Paths Automatically" field in the inspector.
+		/// </summary>
+		public AutoRepathPolicy autoRepath = new AutoRepathPolicy();
 
 		/// <summary>\copydoc Pathfinding::IAstarAI::canMove</summary>
 		public bool canMove = true;
@@ -173,7 +201,23 @@ namespace Pathfinding {
 		public Vector3 position { get { return updatePosition ? tr.position : simulatedPosition; } }
 
 		/// <summary>\copydoc Pathfinding::IAstarAI::rotation</summary>
-		public Quaternion rotation { get { return updateRotation ? tr.rotation : simulatedRotation; } }
+		public Quaternion rotation {
+			get { return updateRotation ? tr.rotation : simulatedRotation; }
+			set {
+				if (updateRotation) {
+					tr.rotation = value;
+				} else {
+					simulatedRotation = value;
+				}
+			}
+		}
+
+		/// <summary>\copydoc Pathfinding::IAstarAI::endOfPath</summary>
+		public Vector3 endOfPath {
+			get {
+				return interpolator.valid ? interpolator.endPoint : destination;
+			}
+		}
 
 		#region IAstarAI implementation
 
@@ -198,7 +242,8 @@ namespace Pathfinding {
 		/// <summary>\copydoc Pathfinding::IAstarAI::canMove</summary>
 		bool IAstarAI.canMove { get { return canMove; } set { canMove = value; } }
 
-		Vector3 IAstarAI.velocity {
+		/// <summary>\copydoc Pathfinding::IAstarAI::velocity</summary>
+		public Vector3 velocity {
 			get {
 				return Time.deltaTime > 0.00001f ? (previousPosition1 - previousPosition2) / Time.deltaTime : Vector3.zero;
 			}
@@ -257,9 +302,6 @@ namespace Pathfinding {
 		/// <summary>Cached Transform component</summary>
 		protected Transform tr;
 
-		/// <summary>Time when the last path request was sent</summary>
-		protected float lastRepath = -9999;
-
 		/// <summary>Current path which is followed</summary>
 		protected ABPath path;
 
@@ -296,6 +338,16 @@ namespace Pathfinding {
 		/// <summary>Required for serialization backward compatibility</summary>
 		[UnityEngine.Serialization.FormerlySerializedAs("target")][SerializeField][HideInInspector]
 		Transform targetCompatibility;
+
+		[SerializeField]
+		[HideInInspector]
+		[UnityEngine.Serialization.FormerlySerializedAs("repathRate")]
+		float repathRateCompatibility = float.NaN;
+
+		[SerializeField]
+		[HideInInspector]
+		[UnityEngine.Serialization.FormerlySerializedAs("canSearch")]
+		bool canSearchCompability = false;
 
 		protected AILerp () {
 			// Note that this needs to be set here in the constructor and not in e.g Awake
@@ -345,7 +397,7 @@ namespace Pathfinding {
 			if (startHasRun) {
 				// The Teleport call will make sure some variables are properly initialized (like #prevPosition1 and #prevPosition2)
 				Teleport(position, false);
-				lastRepath = float.NegativeInfinity;
+				autoRepath.Reset();
 				if (shouldRecalculatePath) SearchPath();
 			}
 		}
@@ -384,7 +436,7 @@ namespace Pathfinding {
 		/// <summary>True if the path should be automatically recalculated as soon as possible</summary>
 		protected virtual bool shouldRecalculatePath {
 			get {
-				return Time.time - lastRepath >= repathRate && canSearchAgain && canSearch && !float.IsPositiveInfinity(destination.x);
+				return canSearchAgain && autoRepath.ShouldRecalculatePath(position, 0.0f, destination);
 			}
 		}
 
@@ -402,8 +454,6 @@ namespace Pathfinding {
 			if (float.IsPositiveInfinity(destination.x)) return;
 			if (onSearchPath != null) onSearchPath();
 
-			lastRepath = Time.time;
-
 			// This is where the path should start to search from
 			var currentPosition = GetFeetPosition();
 
@@ -420,13 +470,9 @@ namespace Pathfinding {
 
 			canSearchAgain = false;
 
-			// Alternative way of creating a path request
-			//ABPath p = ABPath.Construct(currentPosition, targetPoint, null);
-			//seeker.StartPath(p);
-
 			// Create a new path request
 			// The OnPathComplete method will later be called with the result
-			seeker.StartPath(currentPosition, destination);
+			SetPath(ABPath.Construct(currentPosition, destination, null), false);
 		}
 
 		/// <summary>
@@ -435,6 +481,8 @@ namespace Pathfinding {
 		/// add it here.
 		/// You can also create a new script which inherits from this one
 		/// and override the function in that script.
+		///
+		/// Deprecated: Avoid overriding this method. Instead poll the <see cref="reachedDestination"/> or <see cref="reachedEndOfPath"/> properties.
 		/// </summary>
 		public virtual void OnTargetReached () {
 		}
@@ -471,6 +519,15 @@ namespace Pathfinding {
 			var oldPath = path;
 			path = p;
 			reachedEndOfPath = false;
+
+			// The RandomPath and MultiTargetPath do not have a well defined destination that could have been
+			// set before the paths were calculated. So we instead set the destination here so that some properties
+			// like #reachedDestination and #remainingDistance work correctly.
+			if (path is RandomPath rpath) {
+				destination = rpath.originalEndPoint;
+			} else if (path is MultiTargetPath mpath) {
+				destination = mpath.originalEndPoint;
+			}
 
 			// Just for the rest of the code to work, if there
 			// is only one waypoint in the path add another one
@@ -515,16 +572,20 @@ namespace Pathfinding {
 		}
 
 		/// <summary>\copydoc Pathfinding::IAstarAI::SetPath</summary>
-		public void SetPath (Path path) {
+		public void SetPath (Path path, bool updateDestinationFromPath = true) {
+			if (updateDestinationFromPath && path is ABPath abPath && !(path is RandomPath)) {
+				this.destination = abPath.originalEndPoint;
+			}
+
 			if (path == null) {
 				ClearPath();
 			} else if (path.PipelineState == PathState.Created) {
 				// Path has not started calculation yet
-				lastRepath = Time.time;
 				canSearchAgain = false;
 				seeker.CancelCurrentPathRequest();
 				seeker.StartPath(path);
-			} else if (path.PipelineState == PathState.Returned) {
+				autoRepath.DidRecalculatePath(destination);
+			} else if (path.PipelineState >= PathState.Returning) {
 				// Path has already been calculated
 
 				// We might be calculating another path at the same time, and we don't want that path to override this one. So cancel it.
@@ -648,7 +709,17 @@ namespace Pathfinding {
 			#pragma warning disable 618
 			if (unityThread && targetCompatibility != null) target = targetCompatibility;
 			#pragma warning restore 618
-			return 2;
+
+			if (version <= 3) {
+				repathRate = repathRateCompatibility;
+				canSearch = canSearchCompability;
+			}
+			return 4;
+		}
+
+		public virtual void OnDrawGizmos () {
+			tr = transform;
+			autoRepath.DrawGizmos(this.position, 0.0f);
 		}
 	}
 }

@@ -1,20 +1,12 @@
 {
     "name": "PackageToolsEditor",
-    "rootNamespace": "",
     "references": [
         "AstarPathfindingProject"
     ],
+    "optionalUnityReferences": [],
     "includePlatforms": [
-        "Editor",
-        "WindowsStandalone32",
-        "WindowsStandalone64"
+        "Editor"
     ],
     "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": [],
-    "noEngineReferences": false
+    "allowUnsafeCode": false
 }

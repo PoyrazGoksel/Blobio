@@ -402,8 +402,8 @@ namespace Pathfinding.Voxels {
 		/// <summary>Pool the <see cref="vertices"/> and <see cref="triangles"/> arrays if the <see cref="pool"/> field is true</summary>
 		public void Pool () {
 			if (pool) {
-				Util.ArrayPool<int>.Release (ref triangles);
-				Util.ArrayPool<Vector3>.Release (ref vertices);
+				Util.ArrayPool<int>.Release(ref triangles);
+				Util.ArrayPool<Vector3>.Release(ref vertices);
 			}
 		}
 	}

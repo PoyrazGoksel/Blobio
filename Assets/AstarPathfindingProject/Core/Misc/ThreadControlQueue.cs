@@ -164,8 +164,8 @@ namespace Pathfinding {
 		/// This call will block if there are no items in the queue or if the queue is currently blocked.
 		///
 		/// Returns: A Path object, guaranteed to be not null.
-		/// \throws QueueTerminationException if <see cref="TerminateReceivers"/> has been called.
-		/// \throws System.InvalidOperationException if more receivers get blocked than the fixed count sent to the constructor
+		/// Throws: QueueTerminationException if <see cref="TerminateReceivers"/> has been called.
+		/// Throws: System.InvalidOperationException if more receivers get blocked than the fixed count sent to the constructor
 		/// </summary>
 		public Path Pop () {
 			Monitor.Enter(lockObj);
@@ -210,9 +210,17 @@ namespace Pathfinding {
 				}
 				head.next = null;
 				head = newHead;
+
 				return p;
 			} finally {
-				Monitor.Exit(lockObj);
+				// Normally this only exits via a QueueTerminationException and will always be entered in that case.
+				// However the thread may also be aborted using a ThreadAbortException which can happen at any time.
+				// In particular if the Unity Editor recompiles scripts and is configured to exit play mode on recompilation
+				// then it will apparently abort all threads before the AstarPath.OnDestroy method is called (which would have
+				// cleaned up the threads gracefully). So we need to check if we actually hold the lock before releaseing it.
+				if (Monitor.IsEntered(lockObj)) {
+					Monitor.Exit(lockObj);
+				}
 			}
 		}
 
@@ -234,8 +242,8 @@ namespace Pathfinding {
 		/// 2. try again with PopNoBlock(true), if still null, wait for a bit
 		/// 3. Repeat from step 2.
 		///
-		/// \throws QueueTerminationException if <see cref="TerminateReceivers"/> has been called.
-		/// \throws System.InvalidOperationException if more receivers get blocked than the fixed count sent to the constructor
+		/// Throws: QueueTerminationException if <see cref="TerminateReceivers"/> has been called.
+		/// Throws: System.InvalidOperationException if more receivers get blocked than the fixed count sent to the constructor
 		/// </summary>
 		public Path PopNoBlock (bool blockedBefore) {
 			Monitor.Enter(lockObj);

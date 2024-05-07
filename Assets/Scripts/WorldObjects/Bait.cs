@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Extensions.Unity;
+using UnityEngine;
 using UnityEngine.Events;
 
 namespace WorldObjects
@@ -6,13 +7,12 @@ namespace WorldObjects
     public class Bait : MonoBehaviour
     {
         public event UnityAction<Bait> Eaten;
-        private Vector3 _initPos;
-        public Vector3 InitPos => _initPos;
 
+        public TransformEncapsulated TransformEncapsulated{get;set;}
 
-        private void Start()
+        private void Awake()
         {
-            _initPos = transform.position;
+            TransformEncapsulated = new TransformEncapsulated(transform);
         }
 
         public void OnEaten()

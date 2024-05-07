@@ -113,7 +113,7 @@ namespace Pathfinding.Recast {
 
 		/// <summary>Find all relevant RecastMeshObj components and create ExtraMeshes for them</summary>
 		public void CollectRecastMeshObjs (List<RasterizationMesh> buffer) {
-			var buffer2 = Util.ListPool<RecastMeshObj>.Claim ();
+			var buffer2 = Util.ListPool<RecastMeshObj>.Claim();
 
 			// Get all recast mesh objects inside the bounds
 			RecastMeshObj.GetAllInBounds(buffer2, bounds);
@@ -166,7 +166,7 @@ namespace Pathfinding.Recast {
 			// Clear cache to avoid memory leak
 			capsuleCache.Clear();
 
-			Util.ListPool<RecastMeshObj>.Release (ref buffer2);
+			Util.ListPool<RecastMeshObj>.Release(ref buffer2);
 		}
 
 		public void CollectTerrainMeshes (bool rasterizeTrees, float desiredChunkSize, List<RasterizationMesh> result) {
@@ -266,7 +266,7 @@ namespace Pathfinding.Recast {
 
 			// Create a mesh from the heightmap
 			var numVerts = resultWidth * resultDepth;
-			var terrainVertices = Util.ArrayPool<Vector3>.Claim (numVerts);
+			var terrainVertices = Util.ArrayPool<Vector3>.Claim(numVerts);
 
 			// Create lots of vertices
 			for (int z = 0; z < resultDepth; z++) {
@@ -280,7 +280,7 @@ namespace Pathfinding.Recast {
 
 			// Create the mesh by creating triangles in a grid like pattern
 			int numTris = (resultWidth-1)*(resultDepth-1)*2*3;
-			var tris = Util.ArrayPool<int>.Claim (numTris);
+			var tris = Util.ArrayPool<int>.Claim(numTris);
 			int triangleIndex = 0;
 			for (int z = 0; z < resultDepth-1; z++) {
 				for (int x = 0; x < resultWidth-1; x++) {

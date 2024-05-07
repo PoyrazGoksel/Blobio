@@ -402,11 +402,11 @@ namespace Pathfinding.Voxels {
 
 			int expandIterations = 8;
 
-			ushort[] srcReg = Util.ArrayPool<ushort>.Claim (spanCount);
-			ushort[] srcDist = Util.ArrayPool<ushort>.Claim (spanCount);
-			bool[] closed = Util.ArrayPool<bool>.Claim (spanCount);
-			int[] spanFlags = Util.ArrayPool<int>.Claim (spanCount);
-			Int3[] stack = Util.ArrayPool<Int3>.Claim (spanCount);
+			ushort[] srcReg = Util.ArrayPool<ushort>.Claim(spanCount);
+			ushort[] srcDist = Util.ArrayPool<ushort>.Claim(spanCount);
+			bool[] closed = Util.ArrayPool<bool>.Claim(spanCount);
+			int[] spanFlags = Util.ArrayPool<int>.Claim(spanCount);
+			Int3[] stack = Util.ArrayPool<Int3>.Claim(spanCount);
 
 			// The array pool arrays may contain arbitrary data. We need to zero it out.
 			Util.Memory.MemSet(srcReg, (ushort)0, sizeof(ushort));
@@ -545,11 +545,11 @@ namespace Pathfinding.Voxels {
 
 
 			// Pool arrays
-			Util.ArrayPool<ushort>.Release (ref srcReg);
-			Util.ArrayPool<ushort>.Release (ref srcDist);
-			Util.ArrayPool<bool>.Release (ref closed);
-			Util.ArrayPool<int>.Release (ref spanFlags);
-			Util.ArrayPool<Int3>.Release (ref stack);
+			Util.ArrayPool<ushort>.Release(ref srcReg);
+			Util.ArrayPool<ushort>.Release(ref srcDist);
+			Util.ArrayPool<bool>.Release(ref closed);
+			Util.ArrayPool<int>.Release(ref spanFlags);
+			Util.ArrayPool<Int3>.Release(ref stack);
 			//Debug.Log(w0.Elapsed.TotalMilliseconds.ToString("0.0") + " " + w1.Elapsed.TotalMilliseconds.ToString("0.0") + " " + w2.Elapsed.TotalMilliseconds.ToString("0.0") + " " + w3.Elapsed.TotalMilliseconds.ToString("0.0") + " " + w4.Elapsed.TotalMilliseconds.ToString("0.0") + " " + w5.Elapsed.TotalMilliseconds.ToString("0.0"));
 		}
 

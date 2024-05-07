@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-
+using Pathfinding.Util;
 namespace Pathfinding.Examples {
 	/// <summary>
 	/// Demos different path types.
@@ -16,7 +16,7 @@ namespace Pathfinding.Examples {
 	/// See: Pathfinding.FloodPath
 	/// See: Pathfinding.FloodPathTracer
 	/// </summary>
-	[HelpURL("http://arongranberg.com/astar/docs/class_pathfinding_1_1_examples_1_1_path_types_demo.php")]
+	[HelpURL("https://arongranberg.com/astar/documentation/stable/class_pathfinding_1_1_examples_1_1_path_types_demo.php")]
 	public class PathTypesDemo : MonoBehaviour {
 		public DemoMode activeDemo = DemoMode.ABPath;
 
@@ -52,6 +52,9 @@ namespace Pathfinding.Examples {
 		public int searchLength = 1000;
 		public int spread = 100;
 		public float aimStrength = 0;
+		public bool onlyShortestPath = false;
+
+		GameObject constantPathMeshGo;
 
 		Path lastPath = null;
 		FloodPath lastFloodPath = null;
@@ -77,13 +80,9 @@ namespace Pathfinding.Examples {
 				if (Input.GetKey(KeyCode.LeftControl)) {
 					multipoints.Clear();
 				}
-
-				if (Input.mousePosition.x > 225) {
-					DemoPath();
-				}
 			}
 
-			if (Input.GetMouseButton(0) && Input.GetKey(KeyCode.LeftAlt) && (lastPath == null || lastPath.IsDone())) {
+			if (Input.GetMouseButton(0) && Input.mousePosition.x > 225 && (lastPath == null || lastPath.IsDone())) {
 				DemoPath();
 			}
 		}
@@ -111,11 +110,11 @@ namespace Pathfinding.Examples {
 
 			GUILayout.Space(5);
 
-			GUILayout.Label("Note that the paths are rendered without ANY post-processing applied, so they might look a bit edgy");
+			GUILayout.Label("Note that the paths are rendered without ANY post-processing applied, so they might look a bit jagged");
 
 			GUILayout.Space(5);
 
-			GUILayout.Label("Click anywhere to recalculate the path. Hold Alt to continuously recalculate the path while the mouse is pressed.");
+			GUILayout.Label("Click anywhere to recalculate the path. Hold to continuously recalculate the path.");
 
 			if (activeDemo == DemoMode.ConstantPath || activeDemo == DemoMode.RandomPath || activeDemo == DemoMode.FleePath) {
 				GUILayout.Label("Search Distance ("+searchLength+")");
@@ -132,6 +131,7 @@ namespace Pathfinding.Examples {
 
 			if (activeDemo == DemoMode.MultiTargetPath) {
 				GUILayout.Label("Hold shift and click to add new target points. Hold ctr and click to remove all target points");
+				onlyShortestPath = GUILayout.Toggle(onlyShortestPath, "Only Shortest Path");
 			}
 
 			if (GUILayout.Button("A to B path")) activeDemo = DemoMode.ABPath;
@@ -158,19 +158,9 @@ namespace Pathfinding.Examples {
 			LineRenderer line = ob.GetComponent<LineRenderer>();
 			line.sharedMaterial = lineMat;
 
-			// How many times can Unity change this API? This is getting ridiculous...
-#if UNITY_5_5_OR_NEWER
 			line.startWidth = lineWidth;
 			line.endWidth = lineWidth;
-#if UNITY_2017_1_OR_NEWER
 			line.positionCount = p.vectorPath.Count;
-#else
-			line.numPositions = p.vectorPath.Count;
-#endif
-#else
-			line.SetWidth(lineWidth, lineWidth);
-			line.SetVertexCount(p.vectorPath.Count);
-#endif
 
 			for (int i = 0; i < p.vectorPath.Count; i++) {
 				line.SetPosition(i, p.vectorPath[i] + pathOffset);
@@ -184,6 +174,7 @@ namespace Pathfinding.Examples {
 			for (int i = 0; i < lastRender.Count; i++) {
 				Destroy(lastRender[i]);
 			}
+			if (constantPathMeshGo != null) constantPathMeshGo.SetActive(false);
 			lastRender.Clear();
 		}
 
@@ -241,6 +232,7 @@ namespace Pathfinding.Examples {
 
 		IEnumerator DemoMultiTargetPath () {
 			MultiTargetPath mp = MultiTargetPath.Construct(multipoints.ToArray(), end.position, null, null);
+			mp.pathsForAll = !onlyShortestPath;
 
 			lastPath = mp;
 			AstarPath.StartPath(mp);
@@ -264,18 +256,9 @@ namespace Pathfinding.Examples {
 
 				LineRenderer lr = ob.GetComponent<LineRenderer>();
 				lr.sharedMaterial = lineMat;
-#if UNITY_5_5_OR_NEWER
 				lr.startWidth = lineWidth;
 				lr.endWidth = lineWidth;
-#if UNITY_2017_1_OR_NEWER
 				lr.positionCount = vpath.Count;
-#else
-				lr.numPositions = vpath.Count;
-#endif
-#else
-				lr.SetWidth(lineWidth, lineWidth);
-				lr.SetVertexCount(vpath.Count);
-#endif
 
 				for (int j = 0; j < vpath.Count; j++) {
 					lr.SetPosition(j, vpath[j] + pathOffset);
@@ -291,6 +274,7 @@ namespace Pathfinding.Examples {
 
 		public IEnumerator DemoConstantPath () {
 			ConstantPath constPath = ConstantPath.Construct(end.position, searchLength, null);
+			constPath.Claim(this);
 
 			AstarPath.StartPath(constPath);
 			lastPath = constPath;
@@ -299,46 +283,52 @@ namespace Pathfinding.Examples {
 
 			ClearPrevious();
 
+			if (constantPathMeshGo == null) {
+				constantPathMeshGo = new GameObject("Mesh", typeof(MeshRenderer), typeof(MeshFilter));
+				MeshRenderer re = constantPathMeshGo.GetComponent<MeshRenderer>();
+				re.material = squareMat;
+			}
+			constantPathMeshGo.SetActive(true);
+			var meshFilter = constantPathMeshGo.GetComponent<MeshFilter>();
+			Mesh mesh;
+			if (meshFilter.sharedMesh == null) {
+				mesh = meshFilter.sharedMesh = new Mesh();
+				// Allow rendering more than 16k nodes
+				mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+				mesh.MarkDynamic();
+			} else {
+				mesh = meshFilter.sharedMesh;
+			}
+			mesh.Clear();
+
 			// The following code will build a mesh with a square for each node visited
 			List<GraphNode> nodes = constPath.allNodes;
 
-			Mesh mesh = new Mesh();
+			int vertexCount = nodes.Count*4;
 
-			List<Vector3> verts = new List<Vector3>();
+			// Get an array with at least vertexCount elements from an object pool
+			Vector3[] verts = ArrayPool<Vector3>.Claim(vertexCount);
 
-
-
-			bool drawRaysInstead = false;
-			// This will loop through the nodes from furthest away to nearest, not really necessary... but why not :D
-			for (int i = nodes.Count-1; i >= 0; i--) {
+			// This will loop through the nodes from nearest to furthest
+			for (int i = 0; i < nodes.Count; i++) {
 				Vector3 pos = (Vector3)nodes[i].position+pathOffset;
-				if (verts.Count == 65000 && !drawRaysInstead) {
-					Debug.LogError("Too many nodes, rendering a mesh would throw 65K vertex error. Using Debug.DrawRay instead for the rest of the nodes");
-					drawRaysInstead = true;
-				}
-
-				if (drawRaysInstead) {
-					Debug.DrawRay(pos, Vector3.up, Color.blue);
-					continue;
-				}
-
-				// Add vertices in a square
 
 				GridGraph gg = AstarData.GetGraph(nodes[i]) as GridGraph;
 				float scale = 1F;
 
 				if (gg != null) scale = gg.nodeSize;
 
-				verts.Add(pos+new Vector3(-0.5F, 0, -0.5F)*scale);
-				verts.Add(pos+new Vector3(0.5F, 0, -0.5F)*scale);
-				verts.Add(pos+new Vector3(-0.5F, 0, 0.5F)*scale);
-				verts.Add(pos+new Vector3(0.5F, 0, 0.5F)*scale);
+				// Add vertices in a square
+				verts[i*4+0] = pos+new Vector3(-0.5F, 0, -0.5F)*scale;
+				verts[i*4+1] = pos+new Vector3(0.5F, 0, -0.5F)*scale;
+				verts[i*4+2] = pos+new Vector3(-0.5F, 0, 0.5F)*scale;
+				verts[i*4+3] = pos+new Vector3(0.5F, 0, 0.5F)*scale;
 			}
 
 			// Build triangles for the squares
-			Vector3[] vs = verts.ToArray();
-			int[] tris = new int[(3*vs.Length)/2];
-			for (int i = 0, j = 0; i < vs.Length; j += 6, i += 4) {
+			var indexCount = (3*vertexCount)/2;
+			int[] tris = ArrayPool<int>.Claim(indexCount);
+			for (int i = 0, j = 0; i < vertexCount; j += 6, i += 4) {
 				tris[j+0] = i;
 				tris[j+1] = i+1;
 				tris[j+2] = i+2;
@@ -348,27 +338,24 @@ namespace Pathfinding.Examples {
 				tris[j+5] = i+2;
 			}
 
-			Vector2[] uv = new Vector2[vs.Length];
+			Vector2[] uv = ArrayPool<Vector2>.Claim(vertexCount);
 			// Set up some basic UV
-			for (int i = 0; i < uv.Length; i += 4) {
+			for (int i = 0; i < vertexCount; i += 4) {
 				uv[i] = new Vector2(0, 0);
 				uv[i+1] = new Vector2(1, 0);
 				uv[i+2] = new Vector2(0, 1);
 				uv[i+3] = new Vector2(1, 1);
 			}
 
-			mesh.vertices = vs;
-			mesh.triangles = tris;
-			mesh.uv = uv;
+			mesh.SetVertices(verts, 0, vertexCount);
+			mesh.SetTriangles(tris, 0, indexCount, 0);
+			mesh.SetUVs(0, uv, 0, vertexCount);
 			mesh.RecalculateNormals();
 
-			GameObject go = new GameObject("Mesh", typeof(MeshRenderer), typeof(MeshFilter));
-			MeshFilter fi = go.GetComponent<MeshFilter>();
-			fi.mesh = mesh;
-			MeshRenderer re = go.GetComponent<MeshRenderer>();
-			re.material = squareMat;
-
-			lastRender.Add(go);
+			constPath.Release(this);
+			ArrayPool<int>.Release(ref tris);
+			ArrayPool<Vector2>.Release(ref uv);
+			ArrayPool<Vector3>.Release(ref verts);
 		}
 	}
 }

@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.Events;
 
 namespace Pathfinding {
 	using Pathfinding.RVO;
@@ -9,6 +8,9 @@ namespace Pathfinding {
 
 	/// <summary>
 	/// AI for following paths.
+	///
+	/// [Open online documentation to see images]
+	///
 	/// This AI is the default movement script which comes with the A* Pathfinding Project.
 	/// It is in no way required by the rest of the system, so feel free to write your own. But I hope this script will make it easier
 	/// to set up movement for the characters in your game.
@@ -60,6 +62,7 @@ namespace Pathfinding {
 	/// It may take one or sometimes multiple frames for the path to be calculated, but finally the <see cref="OnPathComplete"/> method will be called and the current path that the AI is following will be replaced.
 	/// </summary>
 	[AddComponentMenu("Pathfinding/AI/AIPath (2D,3D)")]
+	[UniqueComponent(tag = "ai")]
 	public partial class AIPath : AIBase, IAstarAI {
 		/// <summary>
 		/// How quickly the agent accelerates.
@@ -182,7 +185,7 @@ namespace Pathfinding {
 		public bool reachedDestination {
 			get {
 				if (!reachedEndOfPath) return false;
-				if (remainingDistance + movementPlane.ToPlane(destination - interpolator.endPoint).magnitude > endReachedDistance) return false;
+				if (!interpolator.valid || remainingDistance + movementPlane.ToPlane(destination - interpolator.endPoint).magnitude > endReachedDistance) return false;
 
 				// Don't do height checks in 2D mode
 				if (orientation != OrientationMode.YAxisForward) {
@@ -218,6 +221,13 @@ namespace Pathfinding {
 		public Vector3 steeringTarget {
 			get {
 				return interpolator.valid ? interpolator.position : position;
+			}
+		}
+
+		/// <summary>\copydoc Pathfinding::IAstarAI::endOfPath</summary>
+		public override Vector3 endOfPath {
+			get {
+				return interpolator.valid ? interpolator.endPoint : destination;
 			}
 		}
 
@@ -258,6 +268,7 @@ namespace Pathfinding {
 			if (path != null) path.Release(this);
 			path = null;
 			interpolator.SetPath(null);
+			reachedEndOfPath = false;
 		}
 
 		/// <summary>
@@ -267,12 +278,11 @@ namespace Pathfinding {
 		///
 		/// This method will be called again if a new path is calculated as the destination may have changed.
 		/// So when the agent is close to the destination this method will typically be called every <see cref="repathRate"/> seconds.
+		///
+		/// Deprecated: Avoid overriding this method. Instead poll the <see cref="reachedDestination"/> or <see cref="reachedEndOfPath"/> properties.
 		/// </summary>
 		public virtual void OnTargetReached () {
-			TargetReachedAction?.Invoke(this);
 		}
-
-		public event UnityAction<AIPath> TargetReachedAction;
 
 		/// <summary>
 		/// Called when a requested path has been calculated.
@@ -294,6 +304,7 @@ namespace Pathfinding {
 			// More info in p.errorLog (debug string)
 			if (p.error) {
 				p.Release(this);
+				SetPath(null);
 				return;
 			}
 
@@ -302,6 +313,15 @@ namespace Pathfinding {
 
 			// Replace the old path
 			path = p;
+
+			// The RandomPath and MultiTargetPath do not have a well defined destination that could have been
+			// set before the paths were calculated. So we instead set the destination here so that some properties
+			// like #reachedDestination and #remainingDistance work correctly.
+			if (path is RandomPath rpath) {
+				destination = rpath.originalEndPoint;
+			} else if (path is MultiTargetPath mpath) {
+				destination = mpath.originalEndPoint;
+			}
 
 			// Make sure the path contains at least 2 points
 			if (path.vectorPath.Count == 1) path.vectorPath.Add(path.vectorPath[0]);
@@ -335,6 +355,8 @@ namespace Pathfinding {
 
 		protected override void ClearPath () {
 			CancelCurrentPathRequest();
+			if (path != null) path.Release(this);
+			path = null;
 			interpolator.SetPath(null);
 			reachedEndOfPath = false;
 		}
@@ -372,11 +394,12 @@ namespace Pathfinding {
 			var forwards = movementPlane.ToPlane(simulatedRotation * (orientation == OrientationMode.YAxisForward ? Vector3.up : Vector3.forward));
 
 			// Check if we have a valid path to follow and some other script has not stopped the character
-			if (interpolator.valid && !isStopped) {
+			bool stopped = isStopped || (reachedDestination && whenCloseToDestination == CloseToDestinationMode.Stop);
+			if (interpolator.valid && !stopped) {
 				// How fast to move depending on the distance to the destination.
 				// Move slower as the character gets closer to the destination.
 				// This is always a value between 0 and 1.
-				slowdown = distanceToEnd < slowdownDistance? Mathf.Sqrt (distanceToEnd / slowdownDistance) : 1;
+				slowdown = distanceToEnd < slowdownDistance? Mathf.Sqrt(distanceToEnd / slowdownDistance) : 1;
 
 				if (reachedEndOfPath && whenCloseToDestination == CloseToDestinationMode.Stop) {
 					// Slow down as quickly as possible
@@ -438,7 +461,7 @@ namespace Pathfinding {
 			}
 		}
 
-		static NNConstraint cachedNNConstraint = NNConstraint.Default;
+		static NNConstraint cachedNNConstraint = NNConstraint.Walkable;
 		protected override Vector3 ClampToNavmesh (Vector3 position, out bool positionChanged) {
 			if (constrainInsideGraph) {
 				cachedNNConstraint.tags = seeker.traversableTags;
@@ -510,10 +533,9 @@ namespace Pathfinding {
 #endif
 
 		protected override int OnUpgradeSerializedData (int version, bool unityThread) {
-			base.OnUpgradeSerializedData(version, unityThread);
 			// Approximately convert from a damping value to a degrees per second value.
 			if (version < 1) rotationSpeed *= 90;
-			return 2;
+			return base.OnUpgradeSerializedData(version, unityThread);
 		}
 	}
 }

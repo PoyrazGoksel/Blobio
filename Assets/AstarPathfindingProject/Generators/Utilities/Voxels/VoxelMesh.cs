@@ -143,8 +143,6 @@ namespace Pathfinding.Voxels {
 		/// <param name="nvp">Maximum allowed vertices per polygon.</param>
 		/// <param name="mesh">Results will be written to this mesh.</param>
 		public void BuildPolyMesh (VoxelContourSet cset, int nvp, out VoxelMesh mesh) {
-			AstarProfiler.StartProfile("Build Poly Mesh");
-
 			nvp = 3;
 
 			int maxVertices = 0;
@@ -160,14 +158,14 @@ namespace Pathfinding.Voxels {
 				maxVertsPerCont = System.Math.Max(maxVertsPerCont, cset.conts[i].nverts);
 			}
 
-			Int3[] verts = ArrayPool<Int3>.Claim (maxVertices);
-			int[] polys = ArrayPool<int>.Claim (maxTris*nvp);
-			int[] areas = ArrayPool<int>.Claim (maxTris);
+			Int3[] verts = ArrayPool<Int3>.Claim(maxVertices);
+			int[] polys = ArrayPool<int>.Claim(maxTris*nvp);
+			int[] areas = ArrayPool<int>.Claim(maxTris);
 
 			Pathfinding.Util.Memory.MemSet<int>(polys, 0xff, sizeof(int));
 
-			int[] indices = ArrayPool<int>.Claim (maxVertsPerCont);
-			int[] tris = ArrayPool<int>.Claim (maxVertsPerCont*3);
+			int[] indices = ArrayPool<int>.Claim(maxVertsPerCont);
+			int[] tris = ArrayPool<int>.Claim(maxVertsPerCont*3);
 
 			int vertexIndex = 0;
 			int polyIndex = 0;
@@ -215,12 +213,11 @@ namespace Pathfinding.Voxels {
 				areas = Memory.ShrinkArray(areas, areaIndex)
 			};
 
-			ArrayPool<Int3>.Release (ref verts);
-			ArrayPool<int>.Release (ref polys);
-			ArrayPool<int>.Release (ref areas);
-			ArrayPool<int>.Release (ref indices);
-			ArrayPool<int>.Release (ref tris);
-			AstarProfiler.EndProfile("Build Poly Mesh");
+			ArrayPool<Int3>.Release(ref verts);
+			ArrayPool<int>.Release(ref polys);
+			ArrayPool<int>.Release(ref areas);
+			ArrayPool<int>.Release(ref indices);
+			ArrayPool<int>.Release(ref tris);
 		}
 
 		int Triangulate (int n, int[] verts, ref int[] indices, ref int[] tris) {

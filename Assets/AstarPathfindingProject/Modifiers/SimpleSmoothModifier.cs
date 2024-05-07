@@ -8,16 +8,15 @@ namespace Pathfinding {
 	[System.Serializable]
 	[RequireComponent(typeof(Seeker))]
 	/// <summary>
-	/// Modifier which smooths the path. This modifier can smooth a path by either moving the points closer together (Simple) or using Bezier curves (Bezier).\n
-	/// \ingroup modifiers
+	/// Modifier which smooths the path. This modifier can smooth a path by either moving the points closer together (Simple) or using Bezier curves (Bezier).
+	///
 	/// Attach this component to the same GameObject as a Seeker component.
-	/// \n
+	///
 	/// This component will hook in to the Seeker's path post-processing system and will post process any paths it searches for.
 	/// Take a look at the Modifier Priorities settings on the Seeker component to determine where in the process this modifier should process the path.
-	/// \n
-	/// \n
+	///
 	/// Several smoothing types are available, here follows a list of them and a short description of what they do, and how they work.
-	/// But the best way is really to experiment with them yourself.\n
+	/// But the best way is really to experiment with them yourself.
 	///
 	/// - <b>Simple</b> Smooths the path by drawing all points close to each other. This results in paths that might cut corners if you are not careful.
 	/// It will also subdivide the path to create more more points to smooth as otherwise it would still be quite rough.
@@ -31,7 +30,7 @@ namespace Pathfinding {
 	/// Note: Modifies vectorPath array
 	/// TODO: Make the smooth modifier take the world geometry into account when smoothing
 	/// </summary>
-	[HelpURL("http://arongranberg.com/astar/docs/class_pathfinding_1_1_simple_smooth_modifier.php")]
+	[HelpURL("https://arongranberg.com/astar/documentation/stable/class_pathfinding_1_1_simple_smooth_modifier.php")]
 	public class SimpleSmoothModifier : MonoModifier {
 #if UNITY_EDITOR
 		[UnityEditor.MenuItem("CONTEXT/Seeker/Add Simple Smooth Modifier")]
@@ -112,7 +111,7 @@ namespace Pathfinding {
 			}
 
 			if (path != p.vectorPath) {
-				ListPool<Vector3>.Release (ref p.vectorPath);
+				ListPool<Vector3>.Release(ref p.vectorPath);
 				p.vectorPath = path;
 			}
 		}
@@ -135,7 +134,7 @@ namespace Pathfinding {
 				}
 			}
 
-			List<Vector3> subdivided = ListPool<Vector3>.Claim (pointCounter);
+			List<Vector3> subdivided = ListPool<Vector3>.Claim(pointCounter);
 
 			// Set first velocity
 			Vector3 preEndVel = (path[1]-path[0]).normalized;
@@ -194,8 +193,8 @@ namespace Pathfinding {
 
 			int maxLength = (path.Count-2)*(int)Mathf.Pow(2, iterations)+2;
 
-			List<Vector3> subdivided = ListPool<Vector3>.Claim (maxLength);
-			List<Vector3> subdivided2 = ListPool<Vector3>.Claim (maxLength);
+			List<Vector3> subdivided = ListPool<Vector3>.Claim(maxLength);
+			List<Vector3> subdivided2 = ListPool<Vector3>.Claim(maxLength);
 
 			for (int i = 0; i < maxLength; i++) { subdivided.Add(Vector3.zero); subdivided2.Add(Vector3.zero); }
 
@@ -249,7 +248,7 @@ namespace Pathfinding {
 				subdivided[(path.Count-2)*(int)Mathf.Pow(2, iteration+1)+2-1] = subdivided2[currentPathLength-1];
 			}
 
-			ListPool<Vector3>.Release (ref subdivided2);
+			ListPool<Vector3>.Release(ref subdivided2);
 
 			return subdivided;
 		}
@@ -270,7 +269,7 @@ namespace Pathfinding {
 
 				int estimatedNumberOfSegments = Mathf.FloorToInt(pathLength / maxSegmentLength);
 				// Get a list with an initial capacity high enough so that we can add all points
-				subdivided = ListPool<Vector3>.Claim (estimatedNumberOfSegments+2);
+				subdivided = ListPool<Vector3>.Claim(estimatedNumberOfSegments+2);
 
 				float distanceAlong = 0;
 
@@ -300,7 +299,7 @@ namespace Pathfinding {
 				}
 
 				int steps = 1 << subdivisions;
-				subdivided = ListPool<Vector3>.Claim ((path.Count-1)*steps + 1);
+				subdivided = ListPool<Vector3>.Claim((path.Count-1)*steps + 1);
 				Polygon.Subdivide(path, subdivided, steps);
 			}
 
@@ -327,7 +326,7 @@ namespace Pathfinding {
 			if (subdivisions < 0) subdivisions = 0;
 
 			int subMult = 1 << subdivisions;
-			List<Vector3> subdivided = ListPool<Vector3>.Claim ();
+			List<Vector3> subdivided = ListPool<Vector3>.Claim();
 
 			for (int i = 0; i < path.Count-1; i++) {
 				Vector3 tangent1;
