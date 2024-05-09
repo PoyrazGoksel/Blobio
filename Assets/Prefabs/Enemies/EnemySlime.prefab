@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 2065448068774969064}
   - component: {fileID: 7876329696568836153}
   - component: {fileID: 3617181580908042667}
-  - component: {fileID: 3282236343722204240}
-  - component: {fileID: 3214746816597624395}
   - component: {fileID: 7122129691195034126}
+  - component: {fileID: 3282236343722204240}
+  - component: {fileID: 1346314464818604885}
   m_Layer: 0
   m_Name: EnemySlime
   m_TagString: Untagged
@@ -38,6 +38,7 @@ Transform:
   - {fileID: 8918623899137322179}
   - {fileID: 1271242536386544389}
   - {fileID: 2266458166007113550}
+  - {fileID: 6881082508422927157}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2065448068774969064
@@ -124,9 +125,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _score: 0
   _rigTrans: {fileID: 7561319802615531558}
+  SlimeEvents: {fileID: 7122129691195034126}
   _aiPath: {fileID: 7876329696568836153}
-  _sphereDetector: {fileID: 3214746816597624395}
-  _slimeEvents: {fileID: 7122129691195034126}
+  _baitCollisionDetector: {fileID: 1429642237769465771}
+--- !u!114 &7122129691195034126
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1166753482753006228}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 415d17a0db6a458bbaba5482b4d263d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!54 &3282236343722204240
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -154,7 +167,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!135 &3214746816597624395
+--- !u!135 &1346314464818604885
 SphereCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -173,20 +186,8 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 7.66
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &7122129691195034126
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1166753482753006228}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 415d17a0db6a458bbaba5482b4d263d7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Radius: 0.2921875
+  m_Center: {x: 0, y: 0.25, z: 0}
 --- !u!1 &2780000900315623668
 GameObject:
   m_ObjectHideFlags: 0
@@ -411,6 +412,102 @@ Transform:
   - {fileID: 2534085201069697541}
   m_Father: {fileID: 7561319802615531558}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &5619538248452246323
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6881082508422927157}
+  - component: {fileID: 3614477209790196128}
+  - component: {fileID: 7015794941374591809}
+  - component: {fileID: 6881829488798873187}
+  m_Layer: 0
+  m_Name: EatDetector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6881082508422927157
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5619538248452246323}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1231352690620053375}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3614477209790196128
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5619538248452246323}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b30e843cb1b944d980b17c78c449d2c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _slimeEvents: {fileID: 7122129691195034126}
+  _sphereCollider: {fileID: 7015794941374591809}
+--- !u!135 &7015794941374591809
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5619538248452246323}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.2921875
+  m_Center: {x: 0, y: 0.25, z: 0}
+--- !u!54 &6881829488798873187
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5619538248452246323}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &6299120538994499912
 GameObject:
   m_ObjectHideFlags: 0
@@ -513,7 +610,7 @@ GameObject:
   - component: {fileID: 6211515585468627036}
   - component: {fileID: 4424676708412102999}
   m_Layer: 0
-  m_Name: SlimeEnemyDetector
+  m_Name: EnemyDetector
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -547,6 +644,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _slimeEvents: {fileID: 7122129691195034126}
+  _sphereCollider: {fileID: 4424676708412102999}
 --- !u!54 &6211515585468627036
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -589,7 +687,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -604,11 +702,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1271242536386544389}
-  - component: {fileID: 8902807371608962155}
   - component: {fileID: 1985792395471203382}
   - component: {fileID: 839080287761380960}
+  - component: {fileID: 1429642237769465771}
   m_Layer: 0
-  m_Name: CollisionDetector
+  m_Name: BaitDetector
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -629,29 +727,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1231352690620053375}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!136 &8902807371608962155
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8299713463531413142}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.29218748
-  m_Height: 0.58437496
-  m_Direction: 1
-  m_Center: {x: 0, y: 0.20194134, z: 0}
 --- !u!114 &1985792395471203382
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -665,6 +740,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _slimeEvents: {fileID: 7122129691195034126}
+  _sphereCollider: {fileID: 1429642237769465771}
 --- !u!54 &839080287761380960
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -692,3 +768,24 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!135 &1429642237769465771
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8299713463531413142}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 7.66
+  m_Center: {x: 0, y: 0, z: 0}

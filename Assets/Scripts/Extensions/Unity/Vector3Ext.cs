@@ -19,6 +19,13 @@ namespace Extensions.Unity
             return new Vector3(Mathf.Abs(vector3.x), Mathf.Abs(vector3.y), Mathf.Abs(vector3.z));
         }
 
+        public static Vector3 Flatten(this Vector3 thisVector3, int axisIndexToFlat = 1)
+        {
+            Vector3 flattened = thisVector3;
+            flattened[axisIndexToFlat] = 0;
+            return flattened;
+        }
+        
         public static Vector3 Pow(this Vector3 vector3, float pow)
         {
             for (int i = 0; i < 2; i ++)

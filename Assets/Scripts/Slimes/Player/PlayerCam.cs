@@ -33,6 +33,8 @@ namespace Slimes.Player
 
         private void Update()
         {
+            if(_slimeTrans == false) return;
+            
             Vector3 offSetVect = Vector3.back * (_currSizeOffSet + _mySettings.OffSet);
 
             Quaternion angleAxis = Quaternion.AngleAxis(_mySettings.PanAngle, Vector3.right);

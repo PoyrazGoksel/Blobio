@@ -10,16 +10,14 @@ namespace WorldObjects
     public class BaitSpawner : MonoBehaviour
     {
         [SerializeField] private List<Bait> _baits;
-        [SerializeField] private GameObject _eatenParticleSystemPrefab;
-        
-        private Coroutine _coroutine;
         private Settings _mySettings;
+
         private void Awake()
         {
             _mySettings = ProjectInstaller.Instance.GameSettings.BaitSpawnerSettings;
             SpawnAllBaits();
         
-            _coroutine = StartCoroutine(SpawnRoutine());
+            StartCoroutine(SpawnRoutine());
         }
 
         private void SpawnAllBaits()
@@ -50,11 +48,8 @@ namespace WorldObjects
         {
             eatenBait.Eaten -= OnBaitEaten;
 
-            GameObject newParticleSystemGo = Instantiate
-            (_eatenParticleSystemPrefab, eatenBait.TransformEncapsulated.position, Quaternion.identity);
             _baits.Remove(eatenBait);
 
-            StartCoroutine(ParticleDelayedDestroy(newParticleSystemGo, 2f));
             Destroy(eatenBait.gameObject);
         }
 
@@ -68,27 +63,19 @@ namespace WorldObjects
             }
         }
 
-        private IEnumerator ParticleDelayedDestroy(GameObject particleSystem, float delay)
-        {
-            yield return new WaitForSeconds(delay);
-            
-            Destroy(particleSystem);
-        }
-
         [Serializable]
         public class Settings
         {
-            [SerializeField] private Vector2Int _terrainSize;
-            [SerializeField] private int _initBaitCount = 50;
-            [SerializeField] private float _baitSpawnFreq = 1f;
-            [SerializeField] private GameObject _baitPrefab;
-            [SerializeField] private float _spawnOffSetY = 0.25f;
-
             public Vector2Int TerrainSize => _terrainSize;
             public int InitBaitCount => _initBaitCount;
             public float BaitSpawnFreq => _baitSpawnFreq;
             public GameObject BaitPrefab => _baitPrefab;
             public float SpawnOffSetY => _spawnOffSetY;
+            [SerializeField] private Vector2Int _terrainSize;
+            [SerializeField] private int _initBaitCount = 50;
+            [SerializeField] private float _baitSpawnFreq = 1f;
+            [SerializeField] private GameObject _baitPrefab;
+            [SerializeField] private float _spawnOffSetY = 0.25f;
         }
     }
 }

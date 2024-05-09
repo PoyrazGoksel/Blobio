@@ -1,10 +1,11 @@
-﻿using Events.Internal;
-using Extensions.Unity.MonoHelper;
+using Events.Internal;
 using UnityEngine;
+using Utils;
+using WorldObjects;
 
-namespace Slimes.Enemies
+namespace Slimes
 {
-    public class SlimeEnemyDetector : EventListenerMono
+    public class SlimeBaitDetector : EventListenerMono
     {
         [SerializeField] private SlimeEvents _slimeEvents;
         [SerializeField] private SphereCollider _sphereCollider;
@@ -17,9 +18,9 @@ namespace Slimes.Enemies
 
         private void OnTriggerEnter(Collider other)
         {
-            if(other.TryGetComponent(out Slime slime))
+            if(other.TryGetComponent(out Bait colBait))
             {
-                _slimeEvents.EnemyDetected?.Invoke(slime);
+                _slimeEvents.BaitDetection?.Invoke(colBait);
             }
         }
 

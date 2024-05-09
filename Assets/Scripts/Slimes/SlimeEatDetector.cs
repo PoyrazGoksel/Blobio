@@ -1,10 +1,11 @@
 ﻿using Events.Internal;
 using Extensions.Unity.MonoHelper;
 using UnityEngine;
+using WorldObjects;
 
-namespace Slimes.Enemies
+namespace Slimes
 {
-    public class SlimeEnemyDetector : EventListenerMono
+    public class SlimeEatDetector : EventListenerMono
     {
         [SerializeField] private SlimeEvents _slimeEvents;
         [SerializeField] private SphereCollider _sphereCollider;
@@ -17,9 +18,15 @@ namespace Slimes.Enemies
 
         private void OnTriggerEnter(Collider other)
         {
-            if(other.TryGetComponent(out Slime slime))
+            if(other.TryGetComponent(out Bait currBait))
             {
-                _slimeEvents.EnemyDetected?.Invoke(slime);
+                _slimeEvents.BaitCollision?.Invoke(currBait);
+                currBait.OnEaten();
+            }
+            
+            if(other.TryGetComponent(out Slime otherSlime))
+            {
+                _slimeEvents.SlimeCollision?.Invoke(otherSlime);
             }
         }
 

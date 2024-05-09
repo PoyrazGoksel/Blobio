@@ -1,4 +1,5 @@
 ﻿using Events;
+using Events.Internal;
 using Extensions.Unity;
 using UnityEngine;
 using Utils;
@@ -8,70 +9,57 @@ namespace Slimes
 {
     public abstract class Slime : EventListenerMono, IPausable
     {
-        private const int EatScoreDiff = 2;
-        protected const float EatDistThreshold = 0.5f;
+        protected const int EatScoreDiff = 2;
         public int Score => _score;
         public TransformEncapsulated Trans{get;set;}
-        [SerializeField] protected int _score;
+        [SerializeField] private int _score;
         [SerializeField] private Transform _rigTrans; // Declare a field for the model's Transform.
+        [SerializeField] protected SlimeEvents SlimeEvents;
 
         protected virtual void Awake()
         {
             Trans = new TransformEncapsulated(transform);
         }
 
-        void IPausable.UnPause()
-        {
-            UnPause();
-        }
+        void IPausable.UnPause() {UnPause();}
 
-        void IPausable.Pause()
+        void IPausable.Pause() {Pause();}
+
+        protected virtual void OnBaitCollision(Bait colBait)
         {
-            Pause();
+            _score ++;
+            IncreaseSize(_score); // You can change this value to your liking
         }
 
         protected virtual void IncreaseSize(int size)
         {
-            _rigTrans.localScale = SlimeF.CalcRigTransLocalScale(size);  // Increase the size of the modelTransform.
+            float newSizeOffset = IncreaseMeshSize(size);
+            SlimeEvents.SizeIncrease?.Invoke(newSizeOffset);
         }
 
-        protected virtual void OnBaitCollision(Bait colBait)
+        private float IncreaseMeshSize(int size)
         {
-            Debug.LogWarning(Score);
-            _score ++;
-            IncreaseSize(_score); // You can change this value to your liking
+            _rigTrans.localScale = SlimeF.CalcRigTransLocalScale
+            (size, out float newSizeOffset); // Increase the size of the modelTransform.
+
+            return newSizeOffset;
         }
 
         protected abstract void Pause();
 
         protected abstract void UnPause();
 
-        protected override void RegisterEvents()
-        {
-            GameStateEvents.Pause += OnPause;
-        }
+        protected override void RegisterEvents() {GameStateEvents.Pause += OnPause;}
 
         private void OnPause(bool isPaused)
         {
-            if(isPaused)
-            {
-                Pause();
-            }
-            else
-            {
-                UnPause();
-            }
+            if(isPaused) Pause();
+            else UnPause();
         }
 
-        protected override void UnRegisterEvents()
-        {
-            GameStateEvents.Pause -= OnPause;
-        }
+        protected override void UnRegisterEvents() {GameStateEvents.Pause -= OnPause;}
 
-        public void Eaten()
-        {
-            this.Destroy();
-        }
+        public void Eaten() {gameObject.Destroy();}
     }
 
     public interface IPausable

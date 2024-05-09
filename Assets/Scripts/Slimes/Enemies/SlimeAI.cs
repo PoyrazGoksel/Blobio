@@ -1,4 +1,3 @@
-using Events.Internal;
 using Extensions.Unity;
 using Pathfinding;
 using UnityEngine;
@@ -9,15 +8,10 @@ namespace Slimes.Enemies
 {
     public class SlimeAI : Slime
     {
-        private const string BaitTag = "Bait";
         private const float DestReachedDist = 1.2f;
         private const float GridMax = 49f;
-        private bool IsWanderRoutineActive => _wanderRoutine.IsStopped == false;
-        private bool IsBaitChaseRoutineActive
-            => _baitChaseRoutine.IsStopped == false;
         [SerializeField] private AIPath _aiPath;
-        [SerializeField] private SphereCollider _sphereDetector;
-        [SerializeField] private SlimeEvents _slimeEvents;
+        [SerializeField] private SphereCollider _baitCollisionDetector;
         private RoutineHelper _baitChaseRoutine;
         private Bait _currBait;
         private Vector3 _currSeekPos;
@@ -39,18 +33,21 @@ namespace Slimes.Enemies
             _enemyChaseRoutine = new RoutineHelper(this, null, EnemyChaseRoutineUpdate);
             _fleeRoutine = new RoutineHelper(this, null, FleeRoutine);
         }
-
+        
         private void Start() {StartWanderRoutine();}
 
-        private void OnTriggerEnter(Collider other)
+        protected override void IncreaseSize(int size)
         {
-            if(other.CompareTag(BaitTag))
-            {
-                _currBait = other.GetComponent<Bait>();
+            base.IncreaseSize(size);
+            //_baitCollisionDetector.radius += initBaitDetectorSize + NewSizeOffset;
+        }
 
-                StopAllBehaviourRoutines();
-                StartBaitChaseRoutine();
-            }
+        private void BaitDetected(Bait bait)
+        {
+            _currBait = bait;
+
+            StopAllBehaviourRoutines();
+            StartBaitChaseRoutine();
         }
 
         private void StopAllBehaviourRoutines()
@@ -91,8 +88,6 @@ namespace Slimes.Enemies
 
         private bool IsFleeTargAttacking(Slime fleeTarg)
         {
-            Debug.LogWarning(fleeTarg.name);
-            Debug.LogWarning(fleeTarg.Trans);
             return IsPositionBetweenTwoAngles(Trans, fleeTarg.Trans.position, 20f);
         }
 
@@ -138,32 +133,23 @@ namespace Slimes.Enemies
                 return;
             }
             
-            if(GetDistance(_currChaseTarg) < EatDistThreshold)
+            _aiPath.destination = _currChaseTarg.Trans.position;
+            _aiPath.SearchPath();
+        }
+
+        private void TryEatEnemy(Slime otherSlime)
+        {
+            if(otherSlime == this) return;
+            
+            if(CanEat(otherSlime))
             {
-                Eat();
+                otherSlime.Eaten();
+            
                 StopAllBehaviourRoutines();
-                StartWanderRoutine();
-            }
-            else
-            {
-                _aiPath.destination = _currChaseTarg.Trans.position;
-                _aiPath.SearchPath();
+                StartWanderRoutine();   
             }
         }
-
-        private void Eat()
-        {
-            //Destroy enemy
-            //Add Score
-            _currChaseTarg.Eaten();
-            _currChaseTarg = null;
-        }
-
-        private float GetDistance(Slime currChaseTarg)
-        {
-            return 0;
-        }
-
+        
         private void StopEnemyChaseRoutine()
         {
             _currChaseTarg = null;
@@ -180,7 +166,6 @@ namespace Slimes.Enemies
                 return;
             }
 
-            _aiPath.isStopped = false;
             _aiPath.destination = _currBait.TransformEncapsulated.position;
             _aiPath.SearchPath();
         }
@@ -214,7 +199,7 @@ namespace Slimes.Enemies
         private Vector3 GetRandWanderPos()
         {
             Vector3 returnPos = transform.position;
-            float sphereDetectorRadius = _sphereDetector.radius;
+            float sphereDetectorRadius = _baitCollisionDetector.radius;
             float sphereDetectorRadiusNegative = -1f * sphereDetectorRadius;
 
             returnPos.x -= Random.Range(sphereDetectorRadiusNegative, sphereDetectorRadius);
@@ -256,7 +241,7 @@ namespace Slimes.Enemies
 
         private bool CanEat(Slime enemySlime)
         {
-            if(Score > enemySlime.Score + 2)
+            if(Score > enemySlime.Score + EatScoreDiff)
             {
                 return true;
             }
@@ -268,7 +253,7 @@ namespace Slimes.Enemies
 
         private bool CanBeEaten(Slime enemySlime)
         {
-            if(Score < enemySlime.Score - 2)
+            if(Score < enemySlime.Score - EatScoreDiff)
             {
                 return true;
             }
@@ -281,8 +266,16 @@ namespace Slimes.Enemies
         protected override void RegisterEvents()
         {
             base.RegisterEvents();
-            _slimeEvents.BaitCollision += OnBaitCollision;
-            _slimeEvents.EnemyDetected += OnEnemyDetected;
+            SlimeEvents.BaitCollision += OnBaitCollision;
+            SlimeEvents.EnemyDetected += OnEnemyDetected;
+            SlimeEvents.SlimeCollision += OnSlimeCollision;
+            SlimeEvents.BaitDetection += OnBaitDetection;
+        }
+
+        protected override void OnBaitCollision(Bait colBait)
+        {
+            base.OnBaitCollision(colBait);
+            
         }
 
         private void OnEnemyDetected(Slime enemySlime)
@@ -290,11 +283,23 @@ namespace Slimes.Enemies
             DecideCombatTactics(enemySlime);
         }
 
+        private void OnSlimeCollision(Slime otherSlime)
+        {
+            TryEatEnemy(otherSlime);
+        }
+
+        private void OnBaitDetection(Bait bait)
+        {
+            BaitDetected(bait);
+        }
+
         protected override void UnRegisterEvents()
         {
             base.UnRegisterEvents();
-            _slimeEvents.BaitCollision -= OnBaitCollision;
-            _slimeEvents.EnemyDetected -= OnEnemyDetected;
+            SlimeEvents.BaitDetection -= OnBaitCollision;
+            SlimeEvents.EnemyDetected -= OnEnemyDetected;
+            SlimeEvents.SlimeCollision -= OnSlimeCollision;
+            SlimeEvents.BaitCollision -= OnBaitDetection;
         }
     }
 }
