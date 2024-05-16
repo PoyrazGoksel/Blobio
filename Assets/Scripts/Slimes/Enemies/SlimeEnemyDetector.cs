@@ -23,6 +23,14 @@ namespace Slimes.Enemies
             }
         }
 
+        private void OnTriggerExit(Collider other)
+        {
+            if(other.TryGetComponent(out Slime slime))
+            {
+                _slimeEvents.EnemyLost?.Invoke(slime);
+            }
+        }
+
         protected override void RegisterEvents()
         {
             _slimeEvents.SizeIncrease += OnSizeIncrease;

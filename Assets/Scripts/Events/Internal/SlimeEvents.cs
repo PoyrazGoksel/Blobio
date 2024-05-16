@@ -12,5 +12,6 @@ namespace Events.Internal
         public UnityAction<Slime> EnemyDetected;
         public UnityAction<Slime> SlimeCollision;
         public UnityAction<float> SizeIncrease;
+        public UnityAction<Slime> EnemyLost;
     }
 }

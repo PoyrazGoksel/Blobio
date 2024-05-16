@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Extensions.Unity;
 using Pathfinding;
 using UnityEngine;
@@ -23,6 +25,8 @@ namespace Slimes.Enemies
         private bool _isWandering;
         private Slime _currFleeTarg;
         private Slime _currChaseTarg;
+        private List<Slime> _currEnemies = new();
+        private bool _isFleeing;
 
         protected override void Awake()
         {
@@ -39,6 +43,7 @@ namespace Slimes.Enemies
         private void Start()
         {
             StopAllBehaviourRoutines();
+            StartFleeRoutine();
             StartWanderRoutine();
         }
         
@@ -51,6 +56,12 @@ namespace Slimes.Enemies
                 (int)(6 / UnityEditor.HandleUtility.GetHandleSize(currPos)));
         }
 #endif
+        private void SetAIState(AIState aiState)
+        {
+            if(_isFleeing) return;
+            
+            _aiState = aiState;
+        }
 
         private void BaitDetected(Bait bait)
         {
@@ -64,42 +75,42 @@ namespace Slimes.Enemies
 
         private void StopAllBehaviourRoutines()
         {
-            StopFleeRoutine();
             StopWanderRoutine();
             StopBaitChaseRoutine();
             StopEnemyChaseRoutine();
         }
         
-        private void StartFleeRoutine(Slime fleeTarg)
+        private void StartFleeRoutine()
         {
-            StopAllBehaviourRoutines();
-            
-            _currFleeTarg = fleeTarg;
-            _aiState = AIState.Fleeing;
             _fleeRoutine.StartCoroutine();
         }
         
         private void FleeRoutine()
         {
-            if(_currFleeTarg == null)
-            {
-                StopAllBehaviourRoutines();
-                StartWanderRoutine();
-                
-                return;
-            }
+            if(_currEnemies.Count == 0) return;
+
+            _currEnemies = _currEnemies.Where(e => e != null).ToList();
             
-            if(IsFleeTargAttacking(_currFleeTarg))
-            {
-                StopAllBehaviourRoutines();
-                _aiPath.destination = (Trans.position - _currFleeTarg.Trans.position) + Trans.position;
-                _aiPath.SearchPath();
-            }
+            _currEnemies = _currEnemies.OrderBy(e => Vector3.Distance(Trans.position, e.Trans.position)).ToList();
             
-            //TODO: Continue checking enemies for attack behaviour;
-            else
+            foreach(Slime slime in _currEnemies)
             {
-                StartWanderRoutine();
+                if(CanBeEaten(slime) && IsFleeTargAttacking(slime))
+                {
+                    SetAIState(AIState.Fleeing);
+                    _currFleeTarg = slime;
+                    _aiPath.destination = (Trans.position - _currFleeTarg.Trans.position) + Trans.position;
+                    _aiPath.SearchPath();
+                    _isFleeing = true;
+                    return;
+                }
+            }
+
+            if(_isFleeing) // TODO: when these were not added it was working
+            {
+                _isFleeing = false;
+                StopAllBehaviourRoutines(); // TODO: when these were not added it was working 
+                StartWanderRoutine();// TODO: when these were not added it was working
             }
         }
 
@@ -130,7 +141,6 @@ namespace Slimes.Enemies
 
         private void StopFleeRoutine()
         {
-            _currFleeTarg = null;
             _fleeRoutine.StopCoroutine();
         }
 
@@ -139,7 +149,7 @@ namespace Slimes.Enemies
             StopAllBehaviourRoutines();
             
             _currChaseTarg = currChaseTarg;
-            _aiState = AIState.ChasingEnemy;
+            SetAIState(AIState.ChasingEnemy);
             _enemyChaseRoutine.StartCoroutine();
         }
 
@@ -181,6 +191,8 @@ namespace Slimes.Enemies
 
         private void TryEatEnemy(Slime otherSlime)
         {
+            if(_isFleeing) return;
+            
             if(otherSlime == this) return;
             
             if(CanEat(otherSlime))
@@ -216,7 +228,7 @@ namespace Slimes.Enemies
         {
             StopAllBehaviourRoutines();
             
-            _aiState = AIState.ChasingBait;
+            SetAIState(AIState.ChasingBait);
             _baitChaseRoutine.StartCoroutine();
         }
 
@@ -227,7 +239,7 @@ namespace Slimes.Enemies
             StopAllBehaviourRoutines();
             
             _isWandering = false;
-            _aiState = AIState.Wandering;
+            SetAIState(AIState.Wandering);
             _wanderRoutine.StartCoroutine();
         }
 
@@ -278,10 +290,6 @@ namespace Slimes.Enemies
             {
                 StartEnemyChaseRoutine(enemySlime);
             }
-            else if(CanBeEaten(enemySlime) && IsFleeTargAttacking(enemySlime))
-            {
-                StartFleeRoutine(enemySlime);
-            }
         }
 
         private bool CanEat(Slime enemySlime)
@@ -312,13 +320,15 @@ namespace Slimes.Enemies
         {
             base.RegisterEvents();
             SlimeEvents.BaitCollision += OnBaitCollision;
-            SlimeEvents.EnemyDetected += OnEnemyDetected;
             SlimeEvents.SlimeCollision += OnSlimeCollision;
             SlimeEvents.BaitDetection += OnBaitDetection;
+            SlimeEvents.EnemyDetected += OnEnemyDetected;
+            SlimeEvents.EnemyLost += OnEnemyLost;
         }
 
         private void OnEnemyDetected(Slime enemySlime)
         {
+            _currEnemies.Add(enemySlime);
             DecideCombatTactics(enemySlime);
         }
 
@@ -332,13 +342,19 @@ namespace Slimes.Enemies
             BaitDetected(bait);
         }
 
+        private void OnEnemyLost(Slime lostEnemy)
+        {
+            _currEnemies.Remove(lostEnemy);
+        }
+
         protected override void UnRegisterEvents()
         {
             base.UnRegisterEvents();
             SlimeEvents.BaitDetection -= OnBaitCollision;
-            SlimeEvents.EnemyDetected -= OnEnemyDetected;
             SlimeEvents.SlimeCollision -= OnSlimeCollision;
             SlimeEvents.BaitCollision -= OnBaitDetection;
+            SlimeEvents.EnemyDetected -= OnEnemyDetected;
+            SlimeEvents.EnemyLost -= OnEnemyLost;
         }
     }
 }
