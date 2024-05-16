@@ -4,16 +4,17 @@ namespace Extensions.Unity
 {
     public static class MathfExt
     {
+        private const float OneDec = 10f;
         private const float MaxEulAngle = 360f;
 
         public static float RoundToOneDec(float number)
         {
-            return Mathf.Round(number * 10f) / 10f;
+            return Mathf.Round(number * OneDec) / OneDec;
         }
 
         public static float ToEul(this float thisFloat)
         {
-            if(thisFloat > MaxEulAngle) thisFloat %= 360f;
+            if(thisFloat > MaxEulAngle) thisFloat %= MaxEulAngle;
             
             return thisFloat;
         }

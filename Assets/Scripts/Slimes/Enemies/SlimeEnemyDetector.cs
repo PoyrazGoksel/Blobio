@@ -30,7 +30,7 @@ namespace Slimes.Enemies
 
         private void OnSizeIncrease(float newSizeOff)
         {
-            _sphereCollider.radius += _initDetectorSize * newSizeOff;
+            _sphereCollider.radius += _initDetectorSize + _initDetectorSize * newSizeOff;
         }
 
         protected override void UnRegisterEvents()
