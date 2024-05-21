@@ -25,10 +25,16 @@ namespace Slimes.Player
             _playerPathSetter.UnPause();
         }
 
+        public override void Eaten()
+        {
+            //base.Eaten();
+            
+        }
+
         protected override void RegisterEvents()
         {
             base.RegisterEvents();
-            SlimeEvents.BaitDetection += OnBaitCollision;
+            SlimeEvents.BaitCollision += OnBaitCollision;
         }
 
         protected override void OnBaitCollision(Bait colBait)
@@ -36,11 +42,11 @@ namespace Slimes.Player
             base.OnBaitCollision(colBait);
             PlayerEvents.PlayerBaitConsume?.Invoke(Score);
         }
-
+        
         protected override void UnRegisterEvents()
         {
             base.UnRegisterEvents();
-            SlimeEvents.BaitDetection -= OnBaitCollision;
+            SlimeEvents.BaitCollision -= OnBaitCollision;
         }
     }
 }

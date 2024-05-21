@@ -59,7 +59,7 @@ namespace Slimes
 
         protected override void UnRegisterEvents() {GameStateEvents.Pause -= OnPause;}
 
-        public void Eaten() {gameObject.Destroy();}
+        public virtual void Eaten() {gameObject.Destroy();}
     }
 
     public interface IPausable

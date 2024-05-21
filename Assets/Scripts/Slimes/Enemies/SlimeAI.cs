@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Datas;
 using Extensions.Unity;
 using Pathfinding;
 using UnityEngine;
@@ -13,6 +14,7 @@ namespace Slimes.Enemies
     {
         private const float DestReachedDist = 1.2f;
         private const float GridMax = 49f;
+        private const float ViewAngle = 20f;
         [SerializeField] private AIPath _aiPath;
         [SerializeField] private SphereCollider _baitCollisionDetector;
         [SerializeField] private AIState _aiState;
@@ -27,6 +29,8 @@ namespace Slimes.Enemies
         private Slime _currChaseTarg;
         private List<Slime> _currEnemies = new();
         private bool _isFleeing;
+        private Ray _rightAngleRay;
+        private Ray _leftAngleRay;
 
         protected override void Awake()
         {
@@ -42,18 +46,38 @@ namespace Slimes.Enemies
 
         private void Start()
         {
+            _fleeRoutine.StartCoroutine();
             StopAllBehaviourRoutines();
-            StartFleeRoutine();
             StartWanderRoutine();
         }
         
 #if UNITY_EDITOR
         private void OnDrawGizmos()
         {
+            Vector3 forward = Trans.forward;
+            
+            float rightAngle = ViewAngle;
+            float leftAngle = -1f * ViewAngle;
+
+            Quaternion leftAngleLineRot = Quaternion.Euler(0f, leftAngle, 0f);
+            Quaternion rightAngleLineRot = Quaternion.Euler(0f, rightAngle, 0f);
+
+            Vector3 leftAnglePos = leftAngleLineRot * forward;
+            Vector3 rightAnglePos = rightAngleLineRot * forward;
+            
+            _leftAngleRay = new (transform.position, leftAnglePos);
+            _rightAngleRay = new (transform.position, rightAnglePos);
+            
             GUISkin guiSkin = GUI.skin;
             Vector3 currPos = transform.position;
             GizmosUtils.DrawText(guiSkin, _aiState.ToString(), currPos, GetStateColor(),
                 (int)(6 / UnityEditor.HandleUtility.GetHandleSize(currPos)));
+            
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawLine(Trans.position, Trans.position + (Trans.forward * 10f));
+            Gizmos.color = Color.blue;
+            Gizmos.DrawLine(Trans.position, Trans.position + _rightAngleRay.direction * 10f);
+            Gizmos.DrawLine(Trans.position, Trans.position + _leftAngleRay.direction * 10f);
         }
 #endif
         private void SetAIState(AIState aiState)
@@ -80,11 +104,6 @@ namespace Slimes.Enemies
             StopEnemyChaseRoutine();
         }
         
-        private void StartFleeRoutine()
-        {
-            _fleeRoutine.StartCoroutine();
-        }
-        
         private void FleeRoutine()
         {
             if(_currEnemies.Count == 0) return;
@@ -99,7 +118,8 @@ namespace Slimes.Enemies
                 {
                     SetAIState(AIState.Fleeing);
                     _currFleeTarg = slime;
-                    _aiPath.destination = (Trans.position - _currFleeTarg.Trans.position) + Trans.position;
+                    Vector3 fleeDirection = (Trans.position - _currFleeTarg.Trans.position).normalized;
+                    _aiPath.destination = fleeDirection + Trans.position;
                     _aiPath.SearchPath();
                     _isFleeing = true;
                     return;
@@ -116,32 +136,27 @@ namespace Slimes.Enemies
 
         private bool IsFleeTargAttacking(Slime fleeTarg)
         {
-            return IsPositionBetweenTwoAngles(Trans, fleeTarg.Trans.position, 20f);
+            return IsPositionBetweenTwoAngles(fleeTarg.Trans, Trans.position, ViewAngle);
         }
 
         private bool IsPositionBetweenTwoAngles
         (
             TransformEncapsulated myTrans,
-            Vector3 position,
+            Vector3 otherPos,
             float viewAngle
         )
         {
             Vector3 forward = myTrans.forward;
-
-            // Calculate direction to position
-            Vector3 dirToPos = position - myTrans.position;
-
-            // Get the angle
+            
+            Vector3 dirToPos = otherPos - myTrans.position;
+            
+            Debug.DrawLine(Trans.position, otherPos, Color.red, Time.deltaTime);
             float angleToPos = Vector3.Angle(forward, dirToPos).ToEul();
 
-            Debug.DrawLine(myTrans.position, position, Color.red,Time.deltaTime);
-            
-            return angleToPos.IsEulBtwn(-1f * viewAngle, viewAngle);
-        }
+            float rightAngle = viewAngle;
+            float leftAngle = -1f * viewAngle;
 
-        private void StopFleeRoutine()
-        {
-            _fleeRoutine.StopCoroutine();
+            return angleToPos.IsEulBtwn(leftAngle, rightAngle);
         }
 
         private void StartEnemyChaseRoutine(Slime currChaseTarg)

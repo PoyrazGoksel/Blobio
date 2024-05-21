@@ -14,8 +14,24 @@ namespace Extensions.Unity
 
         public static float ToEul(this float thisFloat)
         {
-            if(thisFloat > MaxEulAngle) thisFloat %= MaxEulAngle;
-            
+            thisFloat %= MaxEulAngle;
+
+            return thisFloat;
+        }
+        
+        public static float ToShortestAngle(this float thisFloat)
+        {
+            thisFloat %= 360f;
+
+            if (thisFloat > 180f)
+            {
+                thisFloat -= 360f;
+            }
+            else if (thisFloat < -180f)
+            {
+                thisFloat += 360f;
+            }
+
             return thisFloat;
         }
         
