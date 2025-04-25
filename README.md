@@ -1,1 +1,2 @@
-# Tobeto Prototyping Example Project.
+# Blobio
+Beginner level roject for TOBETO students.
